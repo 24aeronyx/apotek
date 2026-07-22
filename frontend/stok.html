@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Stok Apotek</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+    <h2>📦 Manajemen Stok & Barang Masuk</h2>
+    <div>
+        <a href="index.html" style="text-decoration: none; background: #3498db; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">🛒 Ke Kasir</a>
+    </div>
+</div>
+
+<div class="container" style="max-width: 800px;">
+    <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1;">
+        <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">Form Input Stok / Obat Baru (FEFO)</h3>
+        
+        <form id="formStok" onsubmit="tambahStok(event)" style="display: flex; flex-direction: column; gap: 15px;">
+            <div>
+                <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #34495e;">Nama Obat</label>
+                <input type="text" id="namaObat" required placeholder="Contoh: Paracetamol 500mg" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;">
+            </div>
+
+            <div style="display: flex; gap: 15px;">
+                <div style="flex: 1;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #34495e;">Kategori</label>
+                    <input type="text" id="kategoriObat" value="Umum" placeholder="Contoh: Analgesik" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #34495e;">Harga Jual (Rp)</label>
+                    <input type="number" id="hargaJual" required min="0" placeholder="5000" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px;">
+                <div style="flex: 1;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #34495e;">Jumlah Stok Masuk</label>
+                    <input type="number" id="jumlahStok" required min="1" placeholder="50" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #34495e;">Tanggal Kedaluwarsa</label>
+                    <input type="date" id="tglKedaluwarsa" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <button type="submit" style="background: #2ecc71; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;">💾 Simpan ke Database</button>
+        </form>
+
+        <div id="pesanStok" style="margin-top: 15px; padding: 12px; border-radius: 6px; display: none; text-align: center; font-weight: bold;"></div>
+    </div>
+</div>
+
+<script>
+    async function tambahStok(event) {
+        event.preventDefault();
+
+        const pesanDiv = document.getElementById('pesanStok');
+        pesanDiv.style.display = 'block';
+        pesanDiv.style.background = '#f1c40f';
+        pesanDiv.style.color = 'black';
+        pesanDiv.innerText = 'Menyimpan data...';
+
+        const dataPayload = {
+            nama_obat: document.getElementById('namaObat').value,
+            kategori: document.getElementById('kategoriObat').value,
+            harga_jual: parseInt(document.getElementById('hargaJual').value),
+            jumlah: parseInt(document.getElementById('jumlahStok').value),
+            tanggal_kedaluwarsa: document.getElementById('tglKedaluwarsa').value
+        };
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/stok/tambah', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataPayload)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                pesanDiv.style.background = '#d4edda';
+                pesanDiv.style.color = '#155724';
+                pesanDiv.innerText = `✅ Sukses! Stok obat berhasil ditambahkan.`;
+                document.getElementById('formStok').reset();
+            } else {
+                pesanDiv.style.background = '#f8d7da';
+                pesanDiv.style.color = '#721c24';
+                pesanDiv.innerText = `❌ Gagal: ${result.detail || 'Terjadi kesalahan sistem'}`;
+            }
+        } catch (error) {
+            pesanDiv.style.background = '#f8d7da';
+            pesanDiv.style.color = '#721c24';
+            pesanDiv.innerText = `Error server: Pastikan API backend aktif!`;
+        }
+    }
+</script>
+
+</body>
+</html>

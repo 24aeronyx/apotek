@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS Apotek Modern</title>
+    <!-- Memanggil CSS secara terpisah -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Tambahkan tombol riwayat di dalam div class="header" -->
+<div class="header">
+    <h2>💊 Kasir Apotek</h2>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <input type="text" class="search-box" id="searchInput" placeholder="Cari nama obat cepat..." onkeyup="filterObat()">
+        <button onclick="bukaRiwayat()" style="background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 20px; cursor: pointer; font-weight: bold;">📜 Riwayat</button>
+        <a href="stok_bulk.html" style="text-decoration: none; background: #2ecc71; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">📦 Input Stok</a>
+    </div>
+</div>
+
+<!-- Tambahkan Modal Pop-up Riwayat Transaksi di bawah modal keranjang -->
+<div class="modal-overlay" id="riwayatModal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h3>📜 Riwayat Transaksi</h3>
+            <button class="close-btn" onclick="tutupRiwayat()">&times;</button>
+        </div>
+        
+        <table id="tabelRiwayat">
+            <thead>
+                <tr>
+                    <th>ID Nota</th>
+                    <th>Kasir</th>
+                    <th>Waktu</th>
+                    <th>Total Item</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data riwayat akan dimuat di sini -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="container">
+    <div class="product-grid" id="productGrid"></div>
+</div>
+
+<button class="btn-floating" onclick="toggleModal(true)">
+    🛒 Keranjang <span class="badge" id="cartCount">0</span>
+</button>
+
+<div class="modal-overlay" id="cartModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Detail Transaksi</h3>
+            <button class="close-btn" onclick="toggleModal(false)">&times;</button>
+        </div>
+        
+        <table id="tabelKeranjang">
+            <thead>
+                <tr>
+                    <th>Obat</th>
+                    <th>Jml</th>
+                    <th>Subtotal</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <div style="text-align: right; margin-top: 15px; font-size: 18px; font-weight: bold;">
+            Total Bayar: <span id="grandTotal" style="color: #27ae60;">Rp 0</span>
+        </div>
+
+        <button class="btn-proses" onclick="prosesTransaksi()">✔ Proses Pembayaran</button>
+        <div id="pesan"></div>
+    </div>
+</div>
+
+<!-- Area Struk Tersembunyi untuk Printer -->
+<div id="areaStruk" style="display: none;">
+    <div style="width: 300px; font-family: 'Courier New', Courier, monospace; font-size: 12px; padding: 10px; color: black;">
+        <div style="text-align: center; border-bottom: 1px dashed black; padding-bottom: 5px; margin-bottom: 5px;">
+            <h3 style="margin: 0;">APOTEK SEHAT MANDIRI</h3>
+            <p style="margin: 2px 0;">Jl. Contoh No. 123, Kota Anda</p>
+        </div>
+        <div style="margin-bottom: 5px;">
+            <p style="margin: 2px 0;">No. Nota : <span id="strukId">-</span></p>
+            <p style="margin: 2px 0;">Waktu  : <span id="strukWaktu">-</span></p>
+        </div>
+        <div style="border-top: 1px dashed black; border-bottom: 1px dashed black; padding: 5px 0; margin-bottom: 5px;">
+            <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+                <tbody id="strukItemBody"></tbody>
+            </table>
+        </div>
+        <div style="text-align: right; font-weight: bold; margin-bottom: 10px;">
+            <p style="margin: 2px 0;">TOTAL: <span id="strukTotal">Rp 0</span></p>
+        </div>
+        <div style="text-align: center; border-top: 1px dashed black; padding-top: 5px;">
+            <p style="margin: 2px 0;">Terima Kasih</p>
+        </div>
+    </div>
+</div>
+
+<!-- Memanggil JavaScript secara terpisah -->
+ <script src="struk.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

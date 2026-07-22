@@ -1,0 +1,41 @@
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 0; }
+.header { background: white; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
+.header h2 { margin: 0; color: #2c3e50; }
+.search-box { padding: 10px; width: 300px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-size: 16px; }
+
+.container { padding: 20px; max-width: 1200px; margin: auto; }
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; margin-top: 20px; }
+.card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); text-align: center; border: 1px solid #ecf0f1; display: flex; flex-direction: column; justify-content: space-between; }
+.card img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }
+.card h4 { margin: 0 0 5px 0; color: #2c3e50; font-size: 15px; }
+.card p.stok { margin: 0 0 15px 0; color: #7f8c8d; font-size: 13px; font-weight: bold; }
+.stok-habis { color: #e74c3c !important; }
+
+.qty-control { display: flex; align-items: center; justify-content: center; gap: 10px; background: #f8f9fa; padding: 5px; border-radius: 20px; }
+.btn-qty { background: white; border: 1px solid #ccc; width: 30px; height: 30px; border-radius: 50%; font-size: 18px; font-weight: bold; cursor: pointer; color: #2c3e50; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.btn-qty:hover { background: #3498db; color: white; border-color: #3498db; }
+.btn-qty:disabled { background: #ecf0f1; color: #bdc3c7; border-color: #ecf0f1; cursor: not-allowed; box-shadow: none; }
+.qty-angka { font-weight: bold; font-size: 16px; width: 20px; text-align: center; }
+
+.btn-floating { position: fixed; bottom: 30px; right: 30px; background: #e67e22; color: white; border: none; padding: 15px 25px; border-radius: 30px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 10px rgba(230, 126, 34, 0.4); cursor: pointer; z-index: 999; transition: transform 0.2s; }
+.btn-floating:hover { transform: scale(1.05); background: #d35400; }
+.badge { background: white; color: #e67e22; padding: 2px 8px; border-radius: 10px; margin-left: 5px; font-size: 14px; }
+
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+.modal-content { background: white; width: 90%; max-width: 600px; border-radius: 12px; padding: 25px; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; margin-bottom: 15px; }
+.modal-header h3 { margin: 0; }
+.close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #7f8c8d; }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ecf0f1; }
+.btn-hapus { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+.btn-proses { background: #2ecc71; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 20px; cursor: pointer; }
+#pesan { margin-top: 15px; padding: 12px; border-radius: 6px; display: none; text-align: center; font-weight: bold; }
+
+/* CSS Khusus Cetak Struk Printer Thermal */
+@media print {
+    body * { visibility: hidden; }
+    #areaStruk, #areaStruk * { visibility: visible; }
+    #areaStruk { display: block !important; position: absolute; top: 0; left: 0; width: 100%; }
+}

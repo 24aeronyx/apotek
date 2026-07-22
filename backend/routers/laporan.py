@@ -10,19 +10,25 @@ router = APIRouter(tags=["Laporan"])
 def lihat_laporan(user: User = Depends(require_permission("akses_laporan"))):
     db = SessionLocal()
     try:
-        # Ambil semua data transaksi penjualan, urutkan dari yang terbaru
         sales = db.query(Sale).order_by(Sale.waktu_transaksi.desc()).all()
         
         hasil = []
         for s in sales:
-            # Hitung total jenis/jumlah item dalam nota tersebut
-            total_item = db.query(func.sum(SaleItem.jumlah)).filter(SaleItem.sale_id == s.id).scalar() or 0
+            # Hitung total item dan total uang (omzet) per nota
+            items = db.query(SaleItem, Medicine).join(Medicine, SaleItem.medicine_id == Medicine.id).filter(SaleItem.sale_id == s.id).all()
+            
+            total_item = 0
+            grand_total = 0
+            for sale_item, medicine in items:
+                total_item += sale_item.jumlah
+                grand_total += medicine.harga_jual * sale_item.jumlah
             
             hasil.append({
                 "id_nota": s.id,
                 "kasir": s.kasir,
                 "waktu": s.waktu_transaksi.strftime("%Y-%m-%d %H:%M:%S"),
-                "total_item": int(total_item)
+                "total_item": int(total_item),
+                "grand_total": int(grand_total) # <-- Menambahkan total pendapatan per nota
             })
             
         return hasil

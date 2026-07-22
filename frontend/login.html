@@ -64,7 +64,7 @@
                 pesanDiv.innerText = '✅ Login Sukses! Mengalihkan...';
 
                 // Simpan token atau status login di localStorage jika diperlukan
-                localStorage.setItem('user_apotek', username);
+                localStorage.setItem('user_apotek', result.username);
 
                 // Arahkan ke halaman utama kasir setelah 1 detik
                 setTimeout(() => {

@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, FastAPI
 from backend.database import SessionLocal
-from backend.routers.user import require_permission
 from backend.models import User, Sale, InventoryBatch, SaleItem
 from backend.schemas import TransaksiKasir
 
@@ -9,13 +8,13 @@ router = APIRouter(tags=["Transaksi"])
 @router.post("/transaksi")
 def proses_transaksi(
     data: TransaksiKasir, 
-    user: User = Depends(require_permission("akses_kasir"))
+    # user: User = Depends(require_permission("akses_kasir"))
 ):
     db = SessionLocal()
     
     try:
         # 1. Buat nota transaksi baru
-        nota_baru = Sale(kasir=user.username, total_item=0)
+        nota_baru = Sale(kasir=data.kasir, total_item=0)
         db.add(nota_baru)
         db.flush() # flush() untuk mendapatkan nota_baru.id tanpa menyimpannya permanen dulu
         
@@ -69,7 +68,7 @@ def proses_transaksi(
         return {
             "message": "Transaksi berhasil", 
             "id_nota": nota_baru.id,
-            "kasir": user.username
+            "kasir": data.kasir
         }
 
     except Exception as e:

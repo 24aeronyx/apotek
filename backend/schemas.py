@@ -13,6 +13,7 @@ class ItemKeranjang(BaseModel):
     jumlah: int
 
 class TransaksiKasir(BaseModel):
+    kasir: str
     keranjang: List[ItemKeranjang]
     
 class ItemObatMasuk(BaseModel):

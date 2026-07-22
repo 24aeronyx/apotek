@@ -1,5 +1,5 @@
-if (!localStorage.getItem('user_apotek')) {
-    window.location.href = 'login.html';
+if (!localStorage.getItem("user_apotek")) {
+  window.location.href = "login.html";
 }
 
 let keranjang = [];
@@ -146,6 +146,9 @@ function hapusItem(index) {
 async function prosesTransaksi() {
   if (keranjang.length === 0) return alert("Keranjang masih kosong!");
 
+  // Ambil nama kasir dari localStorage, fallback ke "admin" jika belum terset
+  const kasirAktif = localStorage.getItem("user_apotek") || "admin";
+
   const pesanDiv = document.getElementById("pesan");
   pesanDiv.style.display = "block";
   pesanDiv.style.background = "#f1c40f";
@@ -157,8 +160,9 @@ async function prosesTransaksi() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        keranjang: keranjang.map((item) => ({
-          id_obat: item.id_obat,
+        kasir: kasirAktif, 
+        keranjang: keranjang.map((item) => ({ // <-- Ubah dari "items" menjadi "keranjang"
+          id_obat: item.id_obat,             // <-- Pastikan juga sesuai dengan property id_obat
           jumlah: item.jumlah,
         })),
       }),
@@ -221,7 +225,7 @@ async function bukaRiwayat() {
     '<tr><td colspan="5" style="text-align:center;">Memuat data...</td></tr>';
 
   try {
-    // Mengambil data dari endpoint laporan/transaksi backend Anda
+    // Menambahkan /api/ agar sesuai dengan router backend FastAPI Anda
     const response = await fetch("http://127.0.0.1:8000/laporan/harian");
     const data = await response.json();
 
@@ -259,18 +263,19 @@ function tutupRiwayat() {
 
 // Fungsi opsional untuk cetak ulang berdasarkan data tersimpan/server
 async function cetakUlang(idNota) {
-    try {
-        const response = await fetch(`http://127.0.0.1:8000/laporan/detail/${idNota}`);
-        if (!response.ok) throw new Error("Gagal mengambil detail transaksi.");
-        
-        const data = await response.json();
-        
-        // Panggil fungsi cetak dari struk.js yang sudah kita buat sebelumnya
-        cetakNotaStruk(data.id_nota, data.keranjang, data.grand_total);
-        
-    } catch (error) {
-        alert("Terjadi kesalahan saat mencetak ulang nota: " + error.message);
-    }
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:8000/laporan/detail/${idNota}`,
+    );
+    if (!response.ok) throw new Error("Gagal mengambil detail transaksi.");
+
+    const data = await response.json();
+
+    // Panggil fungsi cetak dari struk.js yang sudah kita buat sebelumnya
+    cetakNotaStruk(data.id_nota, data.keranjang, data.grand_total);
+  } catch (error) {
+    alert("Terjadi kesalahan saat mencetak ulang nota: " + error.message);
+  }
 }
 
 function formatRupiah(angka) {

@@ -24,3 +24,12 @@ class ItemObatMasuk(BaseModel):
     
 class BulkStokObat(BaseModel):
     items: List[ItemObatMasuk]
+    
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+    
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+    permissions: dict = {"akses_kasir": True, "akses_stok": False, "akses_laporan": False}

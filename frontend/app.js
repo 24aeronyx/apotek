@@ -1,3 +1,7 @@
+if (!localStorage.getItem('user_apotek')) {
+    window.location.href = 'login.html';
+}
+
 let keranjang = [];
 let daftarObatMaster = [];
 

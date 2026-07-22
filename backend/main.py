@@ -1,7 +1,7 @@
 # main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routers import laporan, obat, stok, transaksi
+from backend.routers import laporan, obat, stok, transaksi, user
 from backend.database import engine, SessionLocal
 from backend.models import Base, User
 
@@ -20,18 +20,20 @@ app.include_router(obat.router)
 app.include_router(stok.router)
 app.include_router(laporan.router)
 app.include_router(transaksi.router)
+app.include_router(user.router)
 
-@app.post("/api/init-admin", tags=["Setup"])
+@app.post("/init-admin", tags=["Setup"])
 def buat_admin_pertama():
     db = SessionLocal()
-    cek_user = db.query(User).filter(User.username == "admin").first()
+    # Cek apakah sudah ada user apa pun di dalam database
+    cek_user = db.query(User).first()
     if cek_user:
         db.close()
-        return {"message": "Admin sudah ada."}
+        return {"message": "Sistem sudah memiliki akun pengguna."}
 
     admin_baru = User(
-        username="admin",
-        password_hash="rahasia123",
+        username="Ariel",
+        password_hash="password",
         permissions={"akses_kasir": True, "akses_stok": True, "akses_laporan": True}
     )
     db.add(admin_baru)

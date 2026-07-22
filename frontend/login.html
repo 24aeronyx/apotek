@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - POS Apotek</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f4f7f6; }
+        .login-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; border: 1px solid #ecf0f1; }
+        .login-card h2 { margin-top: 0; color: #2c3e50; text-align: center; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #34495e; font-size: 14px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        .btn-login { background: #3498db; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        .btn-login:hover { background: #2980b9; }
+        #pesanLogin { margin-top: 15px; padding: 10px; border-radius: 6px; display: none; text-align: center; font-weight: bold; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <h2>💊 Login Apotek</h2>
+    <form id="formLogin" onsubmit="prosesLogin(event)">
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="username" required placeholder="Contoh: admin">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="password" required placeholder="Masukkan password">
+        </div>
+        <button type="submit" class="btn-login">Masuk ke Sistem</button>
+    </form>
+    <div id="pesanLogin"></div>
+</div>
+
+<script>
+    async function prosesLogin(event) {
+        event.preventDefault();
+
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const pesanDiv = document.getElementById('pesanLogin');
+
+        pesanDiv.style.display = 'block';
+        pesanDiv.style.background = '#f1c40f';
+        pesanDiv.style.color = 'black';
+        pesanDiv.innerText = 'Memverifikasi akun...';
+
+        try {
+            // Sesuaikan endpoint login dengan backend Anda (misal: /api/login atau form-data OAuth2)
+            const response = await fetch('http://127.0.0.1:8000/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username, password: password })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                pesanDiv.style.background = '#d4edda';
+                pesanDiv.style.color = '#155724';
+                pesanDiv.innerText = '✅ Login Sukses! Mengalihkan...';
+
+                // Simpan token atau status login di localStorage jika diperlukan
+                localStorage.setItem('user_apotek', username);
+
+                // Arahkan ke halaman utama kasir setelah 1 detik
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            } else {
+                pesanDiv.style.background = '#f8d7da';
+                pesanDiv.style.color = '#721c24';
+                pesanDiv.innerText = `❌ Gagal: ${result.detail || 'Username atau password salah'}`;
+            }
+        } catch (error) {
+            pesanDiv.style.background = '#f8d7da';
+            pesanDiv.style.color = '#721c24';
+            pesanDiv.innerText = 'Error server: Pastikan API backend aktif!';
+        }
+    }
+</script>
+
+</body>
+</html>

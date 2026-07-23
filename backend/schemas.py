@@ -1,12 +1,13 @@
 from pydantic import BaseModel
 from datetime import date
-from typing import List
+from typing import List, Optional
 
 class StokObatBaru(BaseModel):
     nama_obat: str
     kategori: str = "Umum"
     jumlah: int
     tanggal_kedaluwarsa: date  # Otomatis tervalidasi ke format YYYY-MM-DD
+    gambar: Optional[str] = ""
     
 class ItemKeranjang(BaseModel):
     id_obat: int
@@ -22,6 +23,7 @@ class ItemObatMasuk(BaseModel):
     harga_jual: int = 0
     jumlah: int
     tanggal_kedaluwarsa: date
+    gambar: Optional[str] = ""
     
 class BulkStokObat(BaseModel):
     items: List[ItemObatMasuk]

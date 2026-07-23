@@ -1,12 +1,21 @@
 # main.py
-from fastapi import FastAPI
+import shutil
+import os
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.staticfiles import StaticFiles # <--- Jangan lupa import ini
 from fastapi.middleware.cors import CORSMiddleware
 from backend.routers import laporan, obat, stok, transaksi, user
 from backend.database import engine, SessionLocal
-from backend.models import Base, User
+from backend.models import Base
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
+
+# 1. Pastikan folder tersedia
+os.makedirs("backend/static/images", exist_ok=True)
+
+# 2. Mount folder static agar bisa diakses publik via URL browser
+app.mount("/static", StaticFiles(directory="backend/static"), name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,21 +31,16 @@ app.include_router(laporan.router)
 app.include_router(transaksi.router)
 app.include_router(user.router)
 
-@app.post("/init-admin", tags=["Setup"])
-def buat_admin_pertama():
-    db = SessionLocal()
-    # Cek apakah sudah ada user apa pun di dalam database
-    cek_user = db.query(User).first()
-    if cek_user:
-        db.close()
-        return {"message": "Sistem sudah memiliki akun pengguna."}
-
-    admin_baru = User(
-        username="Ariel",
-        password_hash="password",
-        permissions={"akses_kasir": True, "akses_stok": True, "akses_laporan": True}
-    )
-    db.add(admin_baru)
-    db.commit()
-    db.close()
-    return {"message": "Sukses! Akun admin berhasil dibuat."}
+# 3. Gunakan @app.post (bukan @router.post) karena menggunakan instance app
+@app.post("/upload-gambar")
+def upload_gambar(file: UploadFile = File(...)):
+    try:
+        file_path = f"backend/static/images/{file.filename}"
+        
+        # Simpan file secara fisik ke folder server
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        return {"url_gambar": f"http://127.0.0.1:8000/static/images/{file.filename}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -64,12 +64,18 @@ def tambah_banyak_stok_obat(
                 obat = Medicine(
                     nama=item.nama_obat, 
                     kategori=item.kategori, 
-                    harga_jual=item.harga_jual
+                    harga_jual=item.harga_jual,
+                    gambar=item.gambar # <-- SIMPAN URL GAMBAR DI SINI
                 )
                 db.add(obat)
                 db.commit()
                 db.refresh(obat)
-                
+            else:
+                # Update gambar jika sebelumnya kosong dan user mengupload gambar baru
+                if item.gambar and not obat.gambar:
+                    obat.gambar = item.gambar
+                    db.commit()
+            
             # Masukkan stok ke tabel Batch (FEFO)
             batch_baru = InventoryBatch(
                 medicine_id=obat.id,
@@ -90,4 +96,3 @@ def tambah_banyak_stok_obat(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
-        

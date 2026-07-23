@@ -14,6 +14,10 @@
         .btn-action-row:hover { background: #c0392b; }
         .btn-tambah-baris { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 15px; }
         .btn-simpan-semua { background: #2ecc71; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; width: 100%; }
+        
+        /* Styling tambahan untuk Modal Pop-up */
+        .modal-overlay { display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
@@ -30,57 +34,70 @@
         <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">Daftar Obat Masuk</h3>
         <p style="color: #7f8c8d; font-size: 14px;">Tambahkan baris sebanyak yang Anda inginkan, isi datanya, lalu klik simpan untuk memasukkan semuanya sekaligus secara instan.</p>
 
-        <form id="formBulkStok" onsubmit="kirimDataBulk(event)">
+        <div id="formBulkStok">
             <table class="table-input" id="tabelInputBulk">
                 <thead>
                     <tr>
-                        <th style="width: 25%;">Nama Obat</th>
-                        <th style="width: 18%;">Kategori</th>
-                        <th style="width: 15%;">Harga Jual (Rp)</th>
-                        <th style="width: 12%;">Jumlah</th>
-                        <th style="width: 20%;">Kedaluwarsa</th>
+                        <th style="width: 20%;">Nama Obat</th>
+                        <th style="width: 15%;">Kategori</th>
+                        <th style="width: 13%;">Harga Jual</th>
+                        <th style="width: 10%;">Jumlah</th>
+                        <th style="width: 17%;">Kedaluwarsa</th>
+                        <th style="width: 15%;">Link Gambar</th>
                         <th style="width: 10%; text-align: center;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="tbodyBulk">
-                    <!-- Baris input dinamis akan ditambahkan di sini -->
+                    <!-- Baris input dinamis ditambahkan lewat JavaScript -->
                 </tbody>
             </table>
 
-            <button type="button" class="btn-tambah-baris" onclick="tambahBarisInput()">+ Tambah Obat</button>
-            <button type="submit" class="btn-simpan-semua">💾 Simpan Semua ke Database</button>
-        </form>
+            <button type="button" class="btn-tambah-baris" onclick="tambahBarisInput()"><i class="fa-solid fa-plus"></i> Tambah Obat</button>
+            <button type="button" class="btn-simpan-semua" onclick="kirimDataBulk(event)"><i class="fa-solid fa-floppy-disk"></i> Simpan Semua ke Database</button>
+        </div>
+    </div>
+</div>
 
-        <div id="pesanBulk" style="margin-top: 15px; padding: 12px; border-radius: 6px; display: none; text-align: center; font-weight: bold;"></div>
+<!-- Modal Pop-up Notifikasi Sukses/Gagal -->
+<div id="modalNotif" class="modal-overlay">
+    <div class="modal-content">
+        <div id="ikonModal" style="font-size: 40px; margin-bottom: 15px;">✅</div>
+        <h3 id="judulModal" style="margin: 0 0 10px 0; color: #2c3e50;">Berhasil!</h3>
+        <p id="pesanModal" style="color: #555; font-size: 14px; margin-bottom: 20px; line-height: 1.5;"></p>
+        <button type="button" onclick="tutupModalNotif()" style="background: #2ecc71; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px;">OK / Tutup</button>
     </div>
 </div>
 
 <script>
-    // Saat halaman dimuat, langsung berikan 3 baris kosong awal secara otomatis
     window.onload = function() {
         tambahBarisInput();
     };
 
     function tambahBarisInput() {
-        const tbody = document.getElementById('tbodyBulk');
-        const row = document.createElement('tr');
-        
-        row.innerHTML = `
-            <td><input type="text" class="input-cell nama-obat" required placeholder="Contoh: Paracetamol"></td>
-            <td><input type="text" class="input-cell kategori" value="Umum" placeholder="Kategori"></td>
-            <td><input type="number" class="input-cell harga" required min="0" placeholder="5000"></td>
-            <td><input type="number" class="input-cell jumlah" required min="1" placeholder="10"></td>
-            <td><input type="date" class="input-cell tgl" required></td>
-            <td style="text-align: center;"><button type="button" class="btn-action-row" onclick="hapusBaris(this)">X</button></td>
+        const tbody = document.getElementById("tbodyBulk");
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td><input type="text" class="nama-obat" placeholder="Nama obat..." required style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;"></td>
+            <td><input type="text" class="kategori" value="Umum" required style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;"></td>
+            <td><input type="number" class="harga" value="0" min="0" required style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;"></td>
+            <td><input type="number" class="jumlah" value="1" min="1" required style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;"></td>
+            <td><input type="date" class="tgl" required style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;"></td>
+            <td>
+                <input type="file" class="input-file-gambar" accept="image/*" 
+                    style="width: 100%; font-size: 11px; padding: 4px; box-sizing: border-box; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 4px; cursor: pointer;">
+            </td>
+            <td style="text-align: center;">
+                <button type="button" class="btn-hapus" onclick="hapusBaris(this)" style="background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">X</button>
+            </td>
         `;
-        tbody.appendChild(row);
+        tbody.appendChild(tr);
     }
 
     function hapusBaris(button) {
         const row = button.closest('tr');
         const tbody = document.getElementById('tbodyBulk');
         
-        // Sisakan minimal 1 baris agar tabel tidak kosong total
         if (tbody.rows.length > 1) {
             row.remove();
         } else {
@@ -88,58 +105,110 @@
         }
     }
 
+    // Fungsi helper mandiri untuk upload satu file gambar
+    async function uploadFileGambar(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch('http://127.0.0.1:8000/upload-gambar', {
+            method: 'POST',
+            body: formData
+        });
+
+        const textRes = await response.text();
+        let data;
+        try {
+            data = JSON.parse(textRes);
+        } catch (e) {
+            throw new Error("Respon server upload gambar tidak valid.");
+        }
+
+        if (!response.ok) {
+            throw new Error(data.detail || "Gagal mengunggah gambar.");
+        }
+        return data.url_gambar || "";
+    }
+
     async function kirimDataBulk(event) {
-        event.preventDefault();
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
 
-        const pesanDiv = document.getElementById('pesanBulk');
-        pesanDiv.style.display = 'block';
-        pesanDiv.style.background = '#f1c40f';
-        pesanDiv.style.color = 'black';
-        pesanDiv.innerText = 'Mengirim data massal...';
+        const modal = document.getElementById('modalNotif');
+        const judulModal = document.getElementById('judulModal');
+        const pesanModal = document.getElementById('pesanModal');
+        const ikonModal = document.getElementById('ikonModal');
 
-        // Kumpulkan semua data dari setiap baris tabel
+        // 1. Tampilkan modal status loading secara eksplisit
+        ikonModal.innerHTML = '⏳';
+        judulModal.innerText = "Memproses...";
+        pesanModal.innerText = "Sedang memproses data dan mengunggah gambar...";
+        modal.style.display = 'flex';
+
         const rows = document.querySelectorAll('#tbodyBulk tr');
         let itemsArray = [];
 
-        rows.forEach(row => {
-            itemsArray.push({
-                nama_obat: row.querySelector('.nama-obat').value,
-                kategori: row.querySelector('.kategori').value,
-                harga_jual: parseInt(row.querySelector('.harga').value),
-                jumlah: parseInt(row.querySelector('.jumlah').value),
-                tanggal_kedaluwarsa: row.querySelector('.tgl').value
-            });
-        });
-
-        const payload = { items: itemsArray };
-
         try {
+            // 2. Iterasi baris dan proses upload gambar secara aman
+            for (let row of rows) {
+                const fileInput = row.querySelector('.input-file-gambar');
+                let urlGambarFinal = "";
+
+                if (fileInput && fileInput.files.length > 0) {
+                    // Upload gambar satu per satu per baris dengan aman
+                    urlGambarFinal = await uploadFileGambar(fileInput.files[0]);
+                }
+
+                itemsArray.push({
+                    nama_obat: row.querySelector('.nama-obat').value,
+                    kategori: row.querySelector('.kategori').value,
+                    harga_jual: parseInt(row.querySelector('.harga').value) || 0,
+                    jumlah: parseInt(row.querySelector('.jumlah').value) || 0,
+                    tanggal_kedaluwarsa: row.querySelector('.tgl').value,
+                    gambar: urlGambarFinal
+                });
+            }
+
+            // 3. Kirim kumpulan data ke endpoint database bulk
             const response = await fetch('http://127.0.0.1:8000/stok/tambah-banyak', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ items: itemsArray })
             });
 
-            const result = await response.json();
+            const textBulk = await response.text();
+            let resultData;
+            try {
+                resultData = JSON.parse(textBulk);
+            } catch (e) {
+                throw new Error("Respon database bulk tidak valid.");
+            }
 
             if (response.ok) {
-                pesanDiv.style.background = '#d4edda';
-                pesanDiv.style.color = '#155724';
-                pesanDiv.innerText = `✅ Berhasil! ${itemsArray.length} jenis obat/batch berhasil ditambahkan ke database.`;
+                // 4. Ubah status modal menjadi sukses BERSIH tanpa refresh/tertutup sendiri
+                ikonModal.innerHTML = '✅';
+                judulModal.innerText = "Berhasil!";
+                pesanModal.innerHTML = `<b>${itemsArray.length}</b> jenis obat/batch berhasil ditambahkan ke database.`;
                 
-                // Reset tabel ke 3 baris kosong
+                // Kosongkan tabel di latar belakang setelah modal sukses berdiri stabil
                 document.getElementById('tbodyBulk').innerHTML = '';
                 tambahBarisInput();
             } else {
-                pesanDiv.style.background = '#f8d7da';
-                pesanDiv.style.color = '#721c24';
-                pesanDiv.innerText = `❌ Gagal: ${result.detail || 'Terjadi kesalahan pada server'}`;
+                ikonModal.innerHTML = '❌';
+                judulModal.innerText = "Gagal!";
+                pesanModal.innerText = resultData.detail || 'Terjadi kesalahan pada server database.';
             }
+
         } catch (error) {
-            pesanDiv.style.background = '#f8d7da';
-            pesanDiv.style.color = '#721c24';
-            pesanDiv.innerText = `Error server: Pastikan API backend aktif!`;
+            ikonModal.innerHTML = '⚠️';
+            judulModal.innerText = "Terjadi Kesalahan!";
+            pesanModal.innerText = error.message || 'Gagal terhubung ke server backend!';
         }
+    }
+
+    function tutupModalNotif() {
+        document.getElementById('modalNotif').style.display = 'none';
     }
 </script>
 

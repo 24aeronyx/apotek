@@ -9,6 +9,28 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 .card img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }
 .card h4 { margin: 0 0 5px 0; color: #2c3e50; font-size: 15px; }
 .card p.stok { margin: 0 0 15px 0; color: #7f8c8d; font-size: 13px; font-weight: bold; }
+.card .product-img-container {
+    width: 100%;
+    height: 140px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.card .product-img-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card .product-img-container .fallback-icon {
+    font-size: 45px;
+    color: #94a3b8; /* Warna abu-abu profesional khas ikon */
+}
 .stok-habis { color: #e74c3c !important; }
 
 .qty-control { display: flex; align-items: center; justify-content: center; gap: 10px; background: #f8f9fa; padding: 5px; border-radius: 20px; }

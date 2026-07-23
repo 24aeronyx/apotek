@@ -30,20 +30,41 @@ function renderGrid(data) {
     const card = document.createElement("div");
     card.className = "card";
 
-    card.innerHTML = `
-            <img src="${obat.gambar}" alt="${obat.nama}">
-            <h4>${obat.nama}</h4>
-            <p style="color: #27ae60; font-weight: bold; margin: 5px 0;">${formatRupiah(obat.harga)}</p>
-            <p class="stok ${isHabis ? "stok-habis" : ""}">
-                ${isHabis ? "Stok Kosong" : "Sisa Stok: " + obat.stok}
-            </p>
-            
-            <div class="qty-control">
-                <button class="btn-qty" onclick="ubahQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, -1, ${obat.stok})" ${qtySekarang === 0 ? "disabled" : ""}>-</button>
-                <span class="qty-angka">${qtySekarang}</span>
-                <button class="btn-qty" onclick="ubahQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, 1, ${obat.stok})" ${stokTersedia <= 0 ? "disabled" : ""}>+</button>
+    // Cek ketat: hanya tampilkan tag img jika obat.gambar valid
+    let bagianGambar = "";
+    if (obat.gambar && obat.gambar.trim() !== "" && obat.gambar !== "null" && obat.gambar !== "undefined") {
+      // Menggunakan &quot; untuk menghindari bentrok tanda kutip di atribut onerror
+      bagianGambar = `
+        <div class="product-img-container">
+            <img src="${obat.gambar}" alt="${obat.nama}" 
+                 onerror="this.parentElement.innerHTML='<div class=&quot;fallback-icon&quot;><i class=&quot;fa-solid fa-prescription-bottle-medical&quot;></i></div>'">
+        </div>
+      `;
+    } else {
+      // Jika kosong dari awal, langsung tampilkan ikon obat Font Awesome
+      bagianGambar = `
+        <div class="product-img-container">
+            <div class="fallback-icon">
+                <i class="fa-solid fa-prescription-bottle-medical"></i>
             </div>
-        `;
+        </div>
+      `;
+    }
+
+    card.innerHTML = `
+        ${bagianGambar}
+        <h4>${obat.nama}</h4>
+        <p style="color: #27ae60; font-weight: bold; margin: 5px 0;">${formatRupiah(obat.harga)}</p>
+        <p class="stok ${isHabis ? "stok-habis" : ""}">
+            ${isHabis ? 'Stok Kosong' : 'Sisa Stok: ' + obat.stok}
+        </p>
+        
+        <div class="qty-control">
+            <button class="btn-qty" onclick="ubahQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, -1, ${obat.stok})" ${qtySekarang === 0 ? "disabled" : ""}><i class="fa-solid fa-minus"></i></button>
+            <span class="qty-angka">${qtySekarang}</span>
+            <button class="btn-qty" onclick="ubahQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, 1, ${obat.stok})" ${stokTersedia <= 0 ? "disabled" : ""}><i class="fa-solid fa-plus"></i></button>
+        </div>
+    `;
     grid.appendChild(card);
   });
 }
@@ -146,23 +167,22 @@ function hapusItem(index) {
 async function prosesTransaksi() {
   if (keranjang.length === 0) return alert("Keranjang masih kosong!");
 
-  // Ambil nama kasir dari localStorage, fallback ke "admin" jika belum terset
   const kasirAktif = localStorage.getItem("user_apotek") || "admin";
 
   const pesanDiv = document.getElementById("pesan");
   pesanDiv.style.display = "block";
   pesanDiv.style.background = "#f1c40f";
   pesanDiv.style.color = "black";
-  pesanDiv.innerText = "Memproses transaksi...";
+  pesanDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses transaksi...';
 
   try {
     const response = await fetch("http://127.0.0.1:8000/transaksi", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        kasir: kasirAktif, 
-        keranjang: keranjang.map((item) => ({ // <-- Ubah dari "items" menjadi "keranjang"
-          id_obat: item.id_obat,             // <-- Pastikan juga sesuai dengan property id_obat
+        kasir: kasirAktif,
+        keranjang: keranjang.map((item) => ({
+          id_obat: item.id_obat,
           jumlah: item.jumlah,
         })),
       }),
@@ -173,12 +193,10 @@ async function prosesTransaksi() {
     if (response.ok) {
       pesanDiv.style.background = "#d4edda";
       pesanDiv.style.color = "#155724";
-      pesanDiv.innerText = `✅ Transaksi Sukses! (ID Nota: ${result.id_nota})`;
+      pesanDiv.innerHTML = `<i class="fa-solid fa-circle-check"></i> Transaksi Sukses! (ID Nota: #${result.id_nota})`;
 
-      // Siapkan data cetak struk
       document.getElementById("strukId").innerText = "#" + result.id_nota;
-      document.getElementById("strukWaktu").innerText =
-        new Date().toLocaleString("id-ID");
+      document.getElementById("strukWaktu").innerText = new Date().toLocaleString("id-ID");
 
       let strukHtml = "";
       let grandTotalStruk = 0;
@@ -186,13 +204,12 @@ async function prosesTransaksi() {
         let sub = item.harga * item.jumlah;
         grandTotalStruk += sub;
         strukHtml += `
-                    <tr><td colspan="2">${item.nama}</td></tr>
-                    <tr><td>${item.jumlah} x ${formatRupiah(item.harga)}</td><td style="text-align: right;">${formatRupiah(sub)}</td></tr>
-                `;
+            <tr><td colspan="2">${item.nama}</td></tr>
+            <tr><td>${item.jumlah} x ${formatRupiah(item.harga)}</td><td style="text-align: right;">${formatRupiah(sub)}</td></tr>
+        `;
       });
       document.getElementById("strukItemBody").innerHTML = strukHtml;
-      document.getElementById("strukTotal").innerText =
-        formatRupiah(grandTotalStruk);
+      document.getElementById("strukTotal").innerText = formatRupiah(grandTotalStruk);
 
       cetakNotaStruk(result.id_nota, keranjang, grandTotalStruk);
 
@@ -205,12 +222,12 @@ async function prosesTransaksi() {
     } else {
       pesanDiv.style.background = "#f8d7da";
       pesanDiv.style.color = "#721c24";
-      pesanDiv.innerText = `❌ Gagal: ${result.detail}`;
+      pesanDiv.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Gagal: ${result.detail}`;
     }
   } catch (error) {
     pesanDiv.style.background = "#f8d7da";
     pesanDiv.style.color = "#721c24";
-    pesanDiv.innerText = `Error server: Pastikan API berjalan!`;
+    pesanDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Error server: Pastikan API berjalan!`;
   }
 }
 
@@ -221,39 +238,36 @@ async function bukaRiwayat() {
   modal.style.display = "flex";
 
   const tbody = document.querySelector("#tabelRiwayat tbody");
-  tbody.innerHTML =
-    '<tr><td colspan="5" style="text-align:center;">Memuat data...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat data...</td></tr>';
 
   try {
-    // Menambahkan /api/ agar sesuai dengan router backend FastAPI Anda
     const response = await fetch("http://127.0.0.1:8000/laporan/harian");
     const data = await response.json();
 
     tbody.innerHTML = "";
     if (data.length === 0) {
-      tbody.innerHTML =
-        '<tr><td colspan="5" style="text-align:center;">Belum ada riwayat transaksi.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada riwayat transaksi.</td></tr>';
       return;
     }
 
-    // Render data ke tabel riwayat
     data.forEach((transaksi) => {
       tbody.innerHTML += `
-                <tr>
-                    <td>#${transaksi.id_nota}</td>
-                    <td>${transaksi.kasir}</td>
-                    <td>${transaksi.waktu}</td>
-                    <td>${transaksi.total_item} Item</td>
-                    <td>
-                        <button style="background: #27ae60; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;" 
-                                onclick="cetakUlang(${transaksi.id_nota})">🖨 Cetak Struk</button>
-                    </td>
-                </tr>
-            `;
+        <tr>
+            <td>#${transaksi.id_nota}</td>
+            <td><i class="fa-solid fa-user-tie" style="margin-right: 4px; color: #64748b;"></i> ${transaksi.kasir}</td>
+            <td>${transaksi.waktu}</td>
+            <td>${transaksi.total_item} Item</td>
+            <td>
+                <button style="background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;" 
+                        onclick="cetakUlang(${transaksi.id_nota})">
+                    <i class="fa-solid fa-print"></i> Cetak
+                </button>
+            </td>
+        </tr>
+      `;
     });
   } catch (error) {
-    tbody.innerHTML =
-      '<tr><td colspan="5" style="text-align:center; color:red;">Gagal memuat riwayat dari server.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;"><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat riwayat dari server.</td></tr>';
   }
 }
 

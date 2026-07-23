@@ -8,22 +8,22 @@ from backend.routers.user import require_permission
 router = APIRouter(tags=["Obat"])
 
 @router.get("/obat/cari")
-def cari_obat(user: User = Depends(require_permission("akses_kasir"))):
+def cari_obat():
     db = SessionLocal()
     try:
+        medicines = db.query(Medicine).all()
         hasil = []
-        obat_list = db.query(Medicine).all()
-        for o in obat_list:
-            total_stok = db.query(func.sum(InventoryBatch.jumlah_stok)).filter(
-                InventoryBatch.medicine_id == o.id
-            ).scalar() or 0
+        for m in medicines:
+            # Hitung total stok dari semua batch yang dimiliki obat ini
+            total_stok = sum(batch.jumlah_stok for batch in m.batches)
             
             hasil.append({
-                "id": o.id, 
-                "nama": o.nama, 
-                "stok": total_stok,
-                "harga": o.harga_jual, # <-- Kirim harga ke frontend
-                "gambar": "https://placehold.co/150x100?text=Obat" 
+                "id": m.id,
+                "nama": m.nama,
+                "kategori": m.kategori,
+                "harga": m.harga_jual,
+                "stok": total_stok, # <-- Total stok gabungan dari inventory_batches
+                "gambar": m.gambar if m.gambar else "https://via.placeholder.com/150" # <-- Kirim URL gambar
             })
         return hasil
     finally:

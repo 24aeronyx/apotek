@@ -37,6 +37,7 @@ class Medicine(Base):
     nama = Column(String(100), unique=True, index=True)
     kategori = Column(String(50), default="Umum")
     harga_jual = Column(Integer, default=0)
+    gambar = Column(String(255), nullable=True) 
     
     batches = relationship("InventoryBatch", back_populates="medicine")
 

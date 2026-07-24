@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard & Laporan - Apotek</title>
+    <!-- CDN jsPDF dan AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <!-- Panggil CDN Chart.js untuk grafik -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -19,12 +22,14 @@
         .btn-export-pdf:hover { background: #a93226; }
 
         /* Pengaturan khusus saat cetak ke PDF */
-        @media print {
-            .header, div[style*="display: flex; gap: 10px;"], .btn-export-excel, .btn-export-pdf {
+       @media print {
+            body { background: white; }
+            .header, div[style*="display: flex; gap: 10px;"], .btn-export-excel, .btn-export-pdf, .stats-container, .card-section:has(#chartOmzet) {
                 display: none !important;
             }
-            body { background: white; }
-            .card-section { border: none; box-shadow: none; padding: 0; }
+            .card-section { border: none; box-shadow: none; padding: 0; margin: 0; }
+            table { width: 100% !important; }
+            th, td { border-bottom: 1px solid #ddd !important; color: black !important; }
         }
     </style>
 </head>
@@ -34,7 +39,10 @@
     <h2>📊 Dashboard & Laporan Keuangan (<span id="namaBulanAktif">Juli</span>)</h2>
     <div style="display: flex; gap: 10px;">
         <a href="index.html" style="text-decoration: none; background: #3498db; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">🛒 Ke Kasir</a>
+        <button onclick="bukaRiwayat()" style="background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 20px; cursor: pointer; font-weight: bold;">📜 Riwayat</button>
         <a href="stok_bulk.html" style="text-decoration: none; background: #2ecc71; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">📦 Input Stok</a>
+        <a href="dashboard.html" style="text-decoration: none; background: #8e44ad; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">📊 Dashboard</a>
+        <button onclick="localStorage.removeItem('user_apotek'); window.location.href='login.html';" style="background: #e74c3c; color: white; border: none; padding: 10px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 14px;">🚪 Keluar</button>
     </div>
 </div>
 
@@ -230,9 +238,56 @@
         document.body.removeChild(a);
     }
 
-    // Export ke PDF (Memanfaatkan fungsi Print bawaan browser yang dioptimalkan jadi PDF)
+    // Export ke PDF dengan Pratinjau (Preview) di Tab Baru
     function exportKePDF() {
-        window.print();
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Judul Dokumen PDF
+        doc.setFontSize(16);
+        doc.setTextColor(44, 62, 80);
+        doc.text("Laporan Riwayat Penjualan Bulan Ini", 14, 20);
+
+        doc.setFontSize(10);
+        doc.setTextColor(127, 140, 141);
+        doc.text("Dicetak pada: " + new Date().toLocaleString('id-ID'), 14, 28);
+
+        // Ambil data langsung dari tabel HTML
+        const headers = [["ID Nota", "Kasir", "Waktu Transaksi", "Jumlah Item", "Grand Total"]];
+        const data = [];
+
+        const rows = document.querySelectorAll("#tabelLaporan tbody tr");
+        rows.forEach(row => {
+            const cols = row.querySelectorAll("td");
+            if (cols.length >= 5) {
+                data.push([
+                    cols[0].innerText.trim(),
+                    cols[1].innerText.trim(),
+                    cols[2].innerText.trim(),
+                    cols[3].innerText.trim(),
+                    cols[4].innerText.trim()
+                ]);
+            }
+        });
+
+        if (data.length === 0) {
+            alert("Tidak ada data untuk diexport ke PDF!");
+            return;
+        }
+
+        // Buat Tabel di dalam PDF
+        doc.autoTable({
+            head: headers,
+            body: data,
+            startY: 35,
+            theme: 'grid',
+            headStyles: { fillColor: [41, 128, 185] },
+            styles: { fontSize: 9, cellPadding: 5 }
+        });
+
+        // Buat URL pratinjau dan buka di tab baru browser
+        const pdfBlobUrl = doc.output('bloburl');
+        window.open(pdfBlobUrl, '_blank');
     }
 
     window.onload = muatDashboard;

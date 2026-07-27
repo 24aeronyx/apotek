@@ -21,6 +21,13 @@ function renderGrid(data) {
   const grid = document.getElementById("productGrid");
   grid.innerHTML = "";
 
+  // Urutkan data: yang stoknya habis (0) akan ditaruh di bawah
+  data.sort((a, b) => {
+    const habisA = a.stok === 0 ? 1 : 0;
+    const habisB = b.stok === 0 ? 1 : 0;
+    return habisA - habisB; // Jika a habis (1) dan b ada stok (0), maka a dipindah ke belakang
+  });
+
   data.forEach((obat) => {
     const itemDiKeranjang = keranjang.find((item) => item.id_obat === obat.id);
     const qtySekarang = itemDiKeranjang ? itemDiKeranjang.jumlah : 0;
@@ -33,7 +40,6 @@ function renderGrid(data) {
     // Cek ketat: hanya tampilkan tag img jika obat.gambar valid
     let bagianGambar = "";
     if (obat.gambar && obat.gambar.trim() !== "" && obat.gambar !== "null" && obat.gambar !== "undefined") {
-      // Menggunakan &quot; untuk menghindari bentrok tanda kutip di atribut onerror
       bagianGambar = `
         <div class="product-img-container">
             <img src="${obat.gambar}" alt="${obat.nama}" 
@@ -41,7 +47,6 @@ function renderGrid(data) {
         </div>
       `;
     } else {
-      // Jika kosong dari awal, langsung tampilkan ikon obat Font Awesome
       bagianGambar = `
         <div class="product-img-container">
             <div class="fallback-icon">

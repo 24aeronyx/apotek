@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Pembelian Stok (Faktur) - Apotek</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .container { max-width: 800px; margin: auto; padding: 20px; }
+        .card-section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #2c3e50; font-size: 14px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        .btn-simpan { background: #2ecc71; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; margin-top: 10px; }
+        .btn-simpan:hover { background: #27ae60; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2>📦 Input Faktur Pembelian Stok</h2>
+    <div style="display: flex; gap: 10px;">
+        <a href="master_obat.html" style="text-decoration: none; background: #f39c12; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">💊 Master Obat</a>
+        <a href="index.html" style="text-decoration: none; background: #3498db; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">🛒 Kasir</a>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card-section">
+        <form id="formPembelian" onsubmit="simpanPembelian(event)">
+            <div class="form-group">
+                <label>Pilih Obat (Dari Master): <span style="color: red;">*</span></label>
+                <select id="selectObat" class="form-control" required>
+                    <option value="">-- Memuat daftar obat --</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Nomor Faktur / No. Batch: <span style="color: red;">*</span></label>
+                <input type="text" id="nomorBatch" class="form-control" placeholder="Contoh: FAC-2026-0801" required>
+            </div>
+
+            <div class="form-group">
+                <label>Jumlah Stok Masuk (Kuantiti): <span style="color: red;">*</span></label>
+                <input type="number" id="jumlahStok" class="form-control" min="1" placeholder="Contoh: 100" required>
+            </div>
+
+            <div class="form-group">
+                <label>Harga Beli Satuan (Modal): <span style="color: red;">*</span></label>
+                <input type="number" id="hargaBeli" class="form-control" min="0" placeholder="Contoh: 3500" required>
+            </div>
+
+            <div class="form-group">
+                <label>Tanggal Kedaluwarsa (Expired Date): <span style="color: red;">*</span></label>
+                <input type="date" id="tglExpired" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn-simpan"><i class="fa-solid fa-floppy-disk"></i> Simpan & Tambah Stok</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 1. Muat daftar obat ke dropdown saat halaman dibuka
+    async function muatDropdownObat() {
+        try {
+            const response = await fetch('http://127.0.0.1:8000/obat');
+            const data = await response.json();
+            const select = document.getElementById('selectObat');
+            
+            select.innerHTML = '<option value="">-- Pilih Obat --</option>';
+            data.forEach(obat => {
+                select.innerHTML += `<option value="${obat.id}">${obat.nama} (Kategori: ${obat.kategori})</option>`;
+            });
+        } catch (error) {
+            console.error("Gagal memuat master obat:", error);
+            alert("Gagal terhubung ke server untuk memuat master obat.");
+        }
+    }
+
+    // 2. Kirim data pembelian stok baru ke backend
+    async function simpanPembelian(event) {
+        event.preventDefault();
+
+        const payload = {
+            medicine_id: parseInt(document.getElementById('selectObat').value),
+            nomor_batch: document.getElementById('nomorBatch').value,
+            jumlah_stok: parseInt(document.getElementById('jumlahStok').value),
+            harga_beli: parseInt(document.getElementById('hargaBeli').value),
+            tanggal_kedaluwarsa: document.getElementById('tglExpired').value
+        };
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/pembelian', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert("Stok berhasil ditambahkan ke batch baru!");
+                document.getElementById('formPembelian').reset();
+            } else {
+                alert("Gagal menyimpan: " + (result.detail || 'Terjadi kesalahan'));
+            }
+        } catch (error) {
+            alert("Gagal terhubung ke server backend!");
+        }
+    }
+
+    window.onload = muatDropdownObat;
+</script>
+
+</body>
+</html>

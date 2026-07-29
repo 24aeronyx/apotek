@@ -48,3 +48,10 @@ class MedicineUpdate(BaseModel):
     kategori: Optional[str] = None
     harga_jual: Optional[float] = None
     gambar: Optional[str] = None
+    
+class PembelianCreate(BaseModel):
+    medicine_id: int
+    nomor_batch: str
+    jumlah_stok: int
+    harga_beli: float
+    tanggal_kedaluwarsa: date

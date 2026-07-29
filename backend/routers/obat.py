@@ -2,6 +2,7 @@ from fastapi import APIRouter, status, HTTPException
 from backend.database import SessionLocal
 from backend.models import Medicine
 from backend.schemas import MedicineCreate, MedicineUpdate
+from sqlalchemy.orm import joinedload
 
 router = APIRouter(tags=["Obat"])
 
@@ -31,14 +32,20 @@ def cari_obat():
 def get_all_medicines():
     db = SessionLocal()
     try:
-        medicines = db.query(Medicine).all()
+        # Gunakan options(joinedload(Medicine.batches)) agar relasi batch ikut terbawa
+        medicines = db.query(Medicine).options(joinedload(Medicine.batches)).all()
+        
         hasil = []
         for m in medicines:
+            # Sekarang m.batches sudah terisi dengan benar karena joinedload
+            total_stok = sum(batch.jumlah_stok for batch in m.batches) if m.batches else 0
+            
             hasil.append({
                 "id": m.id,
                 "nama": m.nama,
                 "kategori": m.kategori,
                 "harga_jual": m.harga_jual,
+                "total_stok": total_stok,
                 "gambar": m.gambar if m.gambar else ""
             })
         return hasil
@@ -47,23 +54,25 @@ def get_all_medicines():
 
 
 # 2. Endpoint untuk menambah Master Obat baru
-@router.post("/obat", status_code=status.HTTP_201_CREATED)
-def create_medicine(data: MedicineCreate):
+@router.get("/obat")
+def get_all_medicines():
     db = SessionLocal()
     try:
-        new_medicine = Medicine(
-            nama=data.nama,
-            kategori=data.kategori,
-            harga_jual=data.harga_jual,
-            gambar=data.gambar
-        )
-        db.add(new_medicine)
-        db.commit()
-        db.refresh(new_medicine)
-        return {"message": "Master obat berhasil ditambahkan", "id": new_medicine.id}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        medicines = db.query(Medicine).all()
+        hasil = []
+        for m in medicines:
+            # Hitung total stok dari seluruh batch yang terikat ke obat ini
+            total_stok = sum(batch.jumlah_stok for batch in m.batches)
+            
+            hasil.append({
+                "id": m.id,
+                "nama": m.nama,
+                "kategori": m.kategori,
+                "harga_jual": m.harga_jual,
+                "total_stok": total_stok, # <-- Kirim data stok ke frontend
+                "gambar": m.gambar if m.gambar else ""
+            })
+        return hasil
     finally:
         db.close()
 

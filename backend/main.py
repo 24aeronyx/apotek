@@ -4,7 +4,7 @@ import os
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.staticfiles import StaticFiles # <--- Jangan lupa import ini
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routers import laporan, obat, stok, transaksi, user
+from backend.routers import laporan, obat, stok, transaksi, user, pembelian
 from backend.database import engine, SessionLocal
 from backend.models import Base
 
@@ -30,6 +30,7 @@ app.include_router(stok.router)
 app.include_router(laporan.router)
 app.include_router(transaksi.router)
 app.include_router(user.router)
+app.include_router(pembelian.router)
 
 # 3. Gunakan @app.post (bukan @router.post) karena menggunakan instance app
 @app.post("/upload-gambar")

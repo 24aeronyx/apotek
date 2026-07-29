@@ -12,20 +12,21 @@
     <!-- Panggil CDN Chart.js untuk grafik -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1; text-align: center; }
-        .stat-card h4 { margin: 0 0 10px 0; color: #7f8c8d; font-size: 14px; text-transform: uppercase; }
-        .stat-card p { margin: 0; color: #2c3e50; font-size: 24px; font-weight: bold; }
+        .stat-card h4 { margin: 0 0 10px 0; color: #7f8c8d; font-size: 13px; text-transform: uppercase; }
+        .stat-card p { margin: 0; color: #2c3e50; font-size: 22px; font-weight: bold; }
         .card-section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1; margin-bottom: 20px; }
         .btn-export-excel { background: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
         .btn-export-excel:hover { background: #219653; }
         .btn-export-pdf { background: #c0392b; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
         .btn-export-pdf:hover { background: #a93226; }
+        .filter-container { display: flex; gap: 15px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; background: #f8f9fa; padding: 15px; border-radius: 8px; }
 
         /* Pengaturan khusus saat cetak ke PDF */
        @media print {
             body { background: white; }
-            .header, div[style*="display: flex; gap: 10px;"], .btn-export-excel, .btn-export-pdf, .stats-container, .card-section:has(#chartOmzet) {
+            .header, div[style*="display: flex; gap: 10px;"], .btn-export-excel, .btn-export-pdf, .stats-container, .filter-container, .card-section:has(#chartOmzet) {
                 display: none !important;
             }
             .card-section { border: none; box-shadow: none; padding: 0; margin: 0; }
@@ -37,7 +38,7 @@
 <body>
 
 <div class="header">
-    <h2><i class="fa-solid fa-chart-pie" style="color: #1abc9c;"></i> Dashboard & Laporan (<span id="namaBulanAktif">Juli</span>)</h2>
+    <h2><i class="fa-solid fa-chart-pie" style="color: #1abc9c;"></i> Dashboard & Laporan Keuangan</h2>
     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
         <a href="index.html" style="text-decoration: none; background: #3498db; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-cash-register"></i> Kasir</a>
         <a href="pembelian.html" style="text-decoration: none; background: #2ecc71; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-truck-ramp-box"></i> Input Stok</a>
@@ -49,25 +50,58 @@
 
 <div class="container" style="max-width: 1100px; margin: auto; padding: 20px;">
     
-    <!-- Kotak Ringkasan Statistik (KPI Cards Bulan Ini) -->
-    <div class="stats-container">
-        <div class="stat-card">
-            <h4>Total Transaksi Bulan Ini</h4>
-            <p id="statTotalTransaksi" style="color: #3498db;">0</p>
+    <!-- Filter Bulan & Tahun -->
+    <div class="filter-container">
+        <div>
+            <label style="font-weight: bold; color: #2c3e50; margin-right: 8px;">Pilih Bulan:</label>
+            <select id="filterBulan" class="form-control" style="padding: 8px; border-radius: 6px; border: 1px solid #ccc;" onchange="muatDashboard()">
+                <option value="1">Januari</option>
+                <option value="2">Februari</option>
+                <option value="3">Maret</option>
+                <option value="4">April</option>
+                <option value="5">Mei</option>
+                <option value="6">Juni</option>
+                <option value="7" selected>Juli</option>
+                <option value="8">Agustus</option>
+                <option value="9">September</option>
+                <option value="10">Oktober</option>
+                <option value="11">November</option>
+                <option value="12">Desember</option>
+            </select>
         </div>
-        <div class="stat-card">
-            <h4>Total Item Terjual Bulan Ini</h4>
-            <p id="statTotalItem" style="color: #e67e22;">0</p>
-        </div>
-        <div class="stat-card">
-            <h4>Estimasi Pendapatan Bulan Ini</h4>
-            <p id="statTotalOmzet" style="color: #27ae60;">Rp 0</p>
+        <div>
+            <label style="font-weight: bold; color: #2c3e50; margin-right: 8px; margin-left: 15px;">Tahun:</label>
+            <select id="filterTahun" class="form-control" style="padding: 8px; border-radius: 6px; border: 1px solid #ccc;" onchange="muatDashboard()">
+                <option value="2025">2025</option>
+                <option value="2026" selected>2026</option>
+                <option value="2027">2027</option>
+            </select>
         </div>
     </div>
 
-    <!-- Bagian Grafik / Chart Transaksi Per Hari (Bulan Aktif) -->
+    <!-- Kotak Ringkasan Statistik (KPI Cards) -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <h4>Total Transaksi</h4>
+            <p id="statTotalTransaksi" style="color: #3498db;">0</p>
+        </div>
+        <div class="stat-card">
+            <h4>Item Terjual</h4>
+            <p id="statTotalItem" style="color: #e67e22;">0</p>
+        </div>
+        <div class="stat-card">
+            <h4>Total Omzet (Pendapatan)</h4>
+            <p id="statTotalOmzet" style="color: #27ae60;">Rp 0</p>
+        </div>
+        <div class="stat-card" style="border-left: 4px solid #8e44ad;">
+            <h4>Estimasi Laba Bersih</h4>
+            <p id="statTotalLaba" style="color: #8e44ad;">Rp 0</p>
+        </div>
+    </div>
+
+    <!-- Bagian Grafik / Chart Transaksi Per Hari (Urut Kiri ke Kanan) -->
     <div class="card-section">
-        <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px;">Grafik Tren Pendapatan Harian (Bulan Ini)</h3>
+        <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px;">Grafik Tren Pendapatan Harian</h3>
         <div style="position: relative; height: 300px; width: 100%;">
             <canvas id="chartOmzet"></canvas>
         </div>
@@ -76,7 +110,7 @@
     <!-- Tabel Detail Laporan Bulanan + Tombol Export -->
     <div class="card-section">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px; margin-bottom: 15px;">
-            <h3 style="margin: 0; color: #2c3e50;">Riwayat Laporan Penjualan Bulan Ini</h3>
+            <h3 style="margin: 0; color: #2c3e50;">Riwayat Laporan Penjualan</h3>
             <div style="display: flex; gap: 8px;">
                 <button type="button" class="btn-export-excel" onclick="exportKeExcel()"><i class="fa-solid fa-file-excel"></i> Export ke Excel</button>
                 <button type="button" class="btn-export-pdf" onclick="exportKePDF()"><i class="fa-solid fa-file-pdf"></i> Export ke PDF</button>
@@ -91,10 +125,11 @@
                     <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; text-align: left;">Waktu Transaksi</th>
                     <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; text-align: left;">Jumlah Item</th>
                     <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; text-align: right;">Grand Total</th>
+                    <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; text-align: right;">Perkiraan Laba</th>
                 </tr>
             </thead>
             <tbody>
-                <tr><td colspan="5" style="text-align: center; padding: 20px;">Memuat data laporan...</td></tr>
+                <tr><td colspan="6" style="text-align: center; padding: 20px;">Memuat data laporan...</td></tr>
             </tbody>
         </table>
     </div>
@@ -103,6 +138,14 @@
 
 <script>
     let chartInstance = null;
+
+    // Set default filter bulan dan tahun sesuai waktu saat ini saat pertama kali buka
+    window.onload = function() {
+        const sekarang = new Date();
+        document.getElementById('filterBulan').value = sekarang.getMonth() + 1;
+        document.getElementById('filterTahun').value = sekarang.getFullYear();
+        muatDashboard();
+    };
 
     async function muatDashboard() {
         try {
@@ -113,20 +156,16 @@
             tbody.innerHTML = '';
 
             if (!Array.isArray(data) || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Belum ada data transaksi tercatat.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">Belum ada data transaksi tercatat.</td></tr>';
                 return;
             }
 
-            // Tentukan Bulan dan Tahun Aktif saat ini (Berdasarkan waktu browser)
-            const sekarang = new Date();
-            const tahunAktif = sekarang.getFullYear();
-            const bulanAktif = sekarang.getMonth() + 1; // 1 - 12
+            const bulanAktif = parseInt(document.getElementById('filterBulan').value);
+            const tahunAktif = parseInt(document.getElementById('filterTahun').value);
 
-            // Array nama bulan untuk judul header
             const namaBulanList = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            document.getElementById('namaBulanAktif').innerText = namaBulanList[sekarang.getMonth()];
 
-            // Filter data HANYA untuk bulan dan tahun yang aktif saat ini
+            // Filter data berdasarkan pilihan dropdown bulan dan tahun
             const dataBulanIni = data.filter(item => {
                 if (!item.waktu) return false;
                 const parts = item.waktu.split(' ')[0].split('-');
@@ -139,10 +178,11 @@
             });
 
             if (dataBulanIni.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px;">Belum ada transaksi pada bulan ${namaBulanList[sekarang.getMonth()]} ini.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px;">Belum ada transaksi pada periode ${namaBulanList[bulanAktif - 1]} ${tahunAktif}.</td></tr>`;
                 document.getElementById('statTotalTransaksi').innerText = 0;
                 document.getElementById('statTotalItem').innerText = 0;
                 document.getElementById('statTotalOmzet').innerText = 'Rp 0';
+                document.getElementById('statTotalLaba').innerText = 'Rp 0';
                 renderGrafikOmzet([], []);
                 return;
             }
@@ -150,13 +190,18 @@
             let totalTransaksi = dataBulanIni.length;
             let totalItemTerjual = 0;
             let totalOmzet = 0;
+            let totalLabaBersih = 0;
             let groupedDataPerHari = {};
 
             dataBulanIni.forEach(item => {
                 totalItemTerjual += item.total_item;
                 totalOmzet += item.grand_total || 0;
+                
+                // Jika backend mengirimkan perkiraan laba per item/transaksi
+                let labaTransaksi = item.estimasi_laba || 0; 
+                totalLabaBersih += labaTransaksi;
 
-                let tanggalSaja = item.waktu.split(' ')[0];
+                let tanggalSaja = item.waktu.split(' ')[0]; // format YYYY-MM-DD
                 if (!groupedDataPerHari[tanggalSaja]) {
                     groupedDataPerHari[tanggalSaja] = 0;
                 }
@@ -169,6 +214,7 @@
                         <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${item.waktu}</td>
                         <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${item.total_item} Item</td>
                         <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: right;">Rp ${(item.grand_total || 0).toLocaleString('id-ID')}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: right; color: #27ae60; font-weight: bold;">Rp ${labaTransaksi.toLocaleString('id-ID')}</td>
                     </tr>
                 `;
             });
@@ -176,15 +222,18 @@
             document.getElementById('statTotalTransaksi').innerText = totalTransaksi;
             document.getElementById('statTotalItem').innerText = totalItemTerjual;
             document.getElementById('statTotalOmzet').innerText = 'Rp ' + totalOmzet.toLocaleString('id-ID');
+            document.getElementById('statTotalLaba').innerText = 'Rp ' + totalLabaBersih.toLocaleString('id-ID');
 
-            let chartLabels = Object.keys(groupedDataPerHari);
-            let chartDataOmzet = Object.values(groupedDataPerHari);
+            // URUTKAN TANGGAL DARI KIRI KE KANAN (Kronologis / Ascending)
+            let sortedDates = Object.keys(groupedDataPerHari).sort((a, b) => new Date(a) - new Date(b));
+            let chartLabels = sortedDates;
+            let chartDataOmzet = sortedDates.map(date => groupedDataPerHari[date]);
 
             renderGrafikOmzet(chartLabels, chartDataOmzet);
 
         } catch (error) {
             console.error("Gagal memuat dashboard:", error);
-            document.querySelector('#tabelLaporan tbody').innerHTML = '<tr><td colspan="5" style="text-align: center; color: red; padding: 20px;">Gagal terhubung ke server backend.</td></tr>';
+            document.querySelector('#tabelLaporan tbody').innerHTML = '<tr><td colspan="6" style="text-align: center; color: red; padding: 20px;">Gagal terhubung ke server backend.</td></tr>';
         }
     }
 
@@ -227,7 +276,7 @@
         let url = URL.createObjectURL(blob);
         let a = document.createElement('a');
         a.href = url;
-        a.download = 'Laporan_Keuangan_Bulan_Ini.xls';
+        a.download = 'Laporan_Keuangan_Apotek.xls';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -237,27 +286,52 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        doc.setFontSize(16);
-        doc.setTextColor(44, 62, 80);
-        doc.text("Laporan Riwayat Penjualan Bulan Ini", 14, 20);
+        // --- 1. KOP SURAT / BRANDING APOTEK ---
+        doc.setFontSize(18);
+        doc.setTextColor(41, 128, 185); // Warna biru elegan
+        doc.text("APOTEK SEHAT MANDIRI", 14, 18); // Ganti dengan nama apotek Anda
 
         doc.setFontSize(10);
         doc.setTextColor(127, 140, 141);
-        doc.text("Dicetak pada: " + new Date().toLocaleString('id-ID'), 14, 28);
+        doc.text("Jl. Kesehatan No. 123, Telp: (021) 555-0199", 14, 24);
+        doc.text("Email: info@apoteksehatmandiri.com", 14, 29);
 
-        const headers = [["ID Nota", "Kasir", "Waktu Transaksi", "Jumlah Item", "Grand Total"]];
+        // Garis Pembatas Kop Surat
+        doc.setLineWidth(0.5);
+        doc.setDrawColor(189, 195, 199);
+        doc.line(14, 33, 196, 33);
+
+        // --- 2. JUDUL LAPORAN & INFORMASI WAKTU ---
+        doc.setFontSize(14);
+        doc.setTextColor(44, 62, 80);
+        doc.text("Laporan Riwayat Penjualan & Keuangan", 14, 42);
+
+        const bulanPilih = document.getElementById('filterBulan').options[document.getElementById('filterBulan').selectedIndex].text;
+        const tahunPilih = document.getElementById('filterTahun').value;
+        
+        doc.setFontSize(10);
+        doc.setTextColor(52, 73, 94);
+        doc.text(`Periode: ${bulanPilih} ${tahunPilih}`, 14, 48);
+        doc.text("Dicetak pada: " + new Date().toLocaleString('id-ID'), 14, 54);
+
+        // --- 3. AMBIL DATA DARI TABEL HTML ---
+        const headers = [["ID Nota", "Kasir", "Waktu Transaksi", "Jumlah Item", "Grand Total", "Perkiraan Laba"]];
         const data = [];
+
+        let totalOmzetPDF = 0;
+        let totalLabaPDF = 0;
 
         const rows = document.querySelectorAll("#tabelLaporan tbody tr");
         rows.forEach(row => {
             const cols = row.querySelectorAll("td");
-            if (cols.length >= 5) {
+            if (cols.length >= 6) {
                 data.push([
                     cols[0].innerText.trim(),
                     cols[1].innerText.trim(),
                     cols[2].innerText.trim(),
                     cols[3].innerText.trim(),
-                    cols[4].innerText.trim()
+                    cols[4].innerText.trim(),
+                    cols[5].innerText.trim()
                 ]);
             }
         });
@@ -267,20 +341,45 @@
             return;
         }
 
+        // --- 4. PEMBUATAN TABEL DENGAN JSPDF-AUTOTABLE ---
         doc.autoTable({
             head: headers,
             body: data,
-            startY: 35,
+            startY: 60,
             theme: 'grid',
-            headStyles: { fillColor: [41, 128, 185] },
-            styles: { fontSize: 9, cellPadding: 5 }
+            headStyles: { fillColor: [41, 128, 185], textColor: [255, 255, 255], fontStyle: 'bold' },
+            styles: { fontSize: 9, cellPadding: 5 },
+            columnStyles: {
+                4: { halign: 'right' },
+                5: { halign: 'right' }
+            }
         });
 
+        // --- 5. TANDA TANGAN / OTORISASI DI BAGIAN BAWAH ---
+        let finalY = doc.lastAutoTable.finalY + 15;
+        
+        // Cek jika posisi tanda tangan hampir tembus halaman bawah, buat halaman baru jika perlu
+        if (finalY > 250) {
+            doc.addPage();
+            finalY = 20;
+        }
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        
+        doc.setFontSize(10);
+        doc.setTextColor(44, 62, 80);
+        doc.text("Mengetahui,", pageWidth - 50, finalY, { align: "center" });
+        doc.text("Penanggung Jawab / Apoteker", pageWidth - 50, finalY + 6, { align: "center" });
+        
+        // Garis tanda tangan
+        doc.line(pageWidth - 75, finalY + 25, pageWidth - 25, finalY + 25);
+        
+        doc.text("( .......................................... )", pageWidth - 50, finalY + 30, { align: "center" });
+
+        // --- 6. BUKA PREVIEW PDF DI TAB BARU ---
         const pdfBlobUrl = doc.output('bloburl');
         window.open(pdfBlobUrl, '_blank');
     }
-
-    window.onload = muatDashboard;
 </script>
 </body>
 </html>

@@ -66,3 +66,4 @@ class SaleItem(Base):
     sale_id = Column(Integer, ForeignKey("sales.id"))
     medicine_id = Column(Integer, ForeignKey("medicines.id"))
     jumlah = Column(Integer)
+    

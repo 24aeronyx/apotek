@@ -36,3 +36,15 @@ class RegisterRequest(BaseModel):
     username: str
     password: str
     permissions: dict = {"akses_kasir": True, "akses_stok": False, "akses_laporan": False}
+    
+class MedicineCreate(BaseModel):
+    nama: str
+    kategori: str
+    harga_jual: float
+    gambar: Optional[str] = None
+
+class MedicineUpdate(BaseModel):
+    nama: Optional[str] = None
+    kategori: Optional[str] = None
+    harga_jual: Optional[float] = None
+    gambar: Optional[str] = None

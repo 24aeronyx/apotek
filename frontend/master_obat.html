@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Data Obat - Apotek</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .container { max-width: 1100px; margin: auto; padding: 20px; }
+        .card-section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1; margin-bottom: 20px; }
+        .table-master { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .table-master th, .table-master td { padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: left; vertical-align: middle; }
+        .table-master th { background: #f8f9fa; color: #2c3e50; }
+        .img-thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; }
+        .btn-tambah { background: #2ecc71; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .btn-tambah:hover { background: #27ae60; }
+        .search-input { padding: 10px 15px; width: 300px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; outline: none; }
+        
+        /* Modal Form */
+        .modal-overlay { display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #2c3e50; font-size: 14px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2>💊 Master Data Katalog Obat</h2>
+    <div style="display: flex; gap: 10px;">
+        <a href="index.html" style="text-decoration: none; background: #3498db; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">🛒 Kasir</a>
+        <a href="stok_bulk.html" style="text-decoration: none; background: #2ecc71; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">📦 Input Stok</a>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <input type="text" id="inputCari" class="search-input" placeholder="🔍 Cari nama obat di master..." onkeyup="filterMaster()">
+            <button type="button" class="btn-tambah" onclick="bukaModalTambah()"><i class="fa-solid fa-plus"></i> Tambah Obat Baru</button>
+        </div>
+
+        <table class="table-master" id="tabelMaster">
+            <thead>
+                <tr>
+                    <th style="width: 8%;">Gambar</th>
+                    <th style="width: 35%;">Nama Obat</th>
+                    <th style="width: 20%;">Kategori</th>
+                    <th style="width: 20%;">Harga Jual Standar</th>
+                    <th style="width: 17%; text-align: center;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="5" style="text-align: center; padding: 20px;">Memuat data master obat...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Form Tambah/Edit Master Obat -->
+<div id="modalMaster" class="modal-overlay">
+    <div class="modal-content">
+        <h3 id="modalTitle" style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">Tambah Obat Baru</h3>
+        <form id="formMaster" onsubmit="simpanMasterObat(event)">
+            <input type="hidden" id="obatId">
+            <div class="form-group">
+                <label>Nama Obat: <span style="color: red;">*</span></label>
+                <input type="text" id="namaObat" class="form-control" placeholder="Contoh: Paracetamol 500mg" required>
+            </div>
+            <div class="form-group">
+                <label>Kategori: <span style="color: red;">*</span></label>
+                <input type="text" id="kategoriObat" class="form-control" value="Umum" required>
+            </div>
+            <div class="form-group">
+                <label>Harga Jual Standar (Rp): <span style="color: red;">*</span></label>
+                <input type="number" id="hargaJual" class="form-control" value="0" min="0" required>
+            </div>
+            <div class="form-group">
+                <label>Upload Gambar Obat: <span style="color: #7f8c8d; font-weight: normal; font-size: 12px;">(Opsional / Tidak wajib)</span></label>
+                <input type="file" id="fileGambar" class="form-control" accept="image/*">
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                <!-- Tombol Hapus (Hanya muncul saat mode Edit) -->
+                <button type="button" id="btnHapusObat" onclick="hapusMasterObat()" style="background: #e74c3c; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; display: none;"><i class="fa-solid fa-trash"></i> Hapus</button>
+                
+                <div style="display: flex; gap: 10px; margin-left: auto;">
+                    <button type="button" onclick="tutupModal()" style="background: #95a5a6; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">Batal</button>
+                    <button type="submit" style="background: #2ecc71; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Simpan</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let listMasterObat = [];
+
+    async function muatMasterObat() {
+        try {
+            const response = await fetch('http://127.0.0.1:8000/obat'); // Mengambil data dari endpoint master obat backend
+            listMasterObat = await response.json();
+            renderTabelMaster(listMasterObat);
+        } catch (error) {
+            console.error("Gagal memuat master obat:", error);
+            document.querySelector('#tabelMaster tbody').innerHTML = '<tr><td colspan="5" style="text-align: center; color: red; padding: 20px;">Gagal terhubung ke server backend.</td></tr>';
+        }
+    }
+
+    function renderTabelMaster(data) {
+        const tbody = document.querySelector('#tabelMaster tbody');
+        tbody.innerHTML = '';
+
+        if (!Array.isArray(data) || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Belum ada data di master obat.</td></tr>';
+            return;
+        }
+
+        data.forEach(obat => {
+            let tampilanGambar = `<div class="img-thumb"><i class="fa-solid fa-prescription-bottle-medical" style="color: #94a3b8;"></i></div>`;
+            if (obat.gambar && obat.gambar.trim() !== "" && obat.gambar !== "null") {
+                tampilanGambar = `<img src="${obat.gambar}" class="img-thumb" alt="${obat.nama}">`;
+            }
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${tampilanGambar}</td>
+                    <td><strong>${obat.nama}</strong></td>
+                    <td>${obat.kategori}</td>
+                    <td>Rp ${(obat.harga_jual || 0).toLocaleString('id-ID')}</td>
+                    <td style="text-align: center; display: flex; justify-content: center; gap: 6px;">
+                        <!-- Tombol Edit -->
+                        <button type="button" onclick="editMaster(${obat.id}, '${obat.nama}', '${obat.kategori}', ${obat.harga_jual})" style="background: #f39c12; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                        
+                        <!-- Tombol Hapus Berdampingan -->
+                        <button type="button" onclick="hapusMasterObat(${obat.id})" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function hapusMasterObat(id) {
+        document.getElementById('idObatDihapus').value = id;
+        document.getElementById('modalHapus').style.display = 'flex';
+    }
+
+    // Fungsi untuk menampilkan modal alert kustom
+    function tampilkanAlert(judul, pesan) {
+        document.getElementById('alertTitle').innerText = judul;
+        document.getElementById('alertMessage').innerText = pesan;
+        document.getElementById('modalAlert').style.display = 'flex';
+    }
+
+    function tutupModalAlert() {
+        document.getElementById('modalAlert').style.display = 'none';
+    }
+
+    // Eksekusi penghapusan dengan modal alert kustom
+    async function eksekusiHapus() {
+        const id = document.getElementById('idObatDihapus').value;
+        if (!id) return;
+
+        // Tutup modal konfirmasi hapus terlebih dahulu
+        tutupModalHapus();
+
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/obat/${id}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                muatMasterObat();
+            } else {
+                // Munculkan pesan error asli dari backend (misal: terikat dengan data batch)
+                tampilkanAlert("Gagal Menghapus", result.detail || 'Obat masih terikat dengan data batch atau transaksi.');
+            }
+        } catch (error) {
+            tampilkanAlert("Kesalahan Koneksi", "Gagal terhubung ke server backend!");
+        }
+    }
+
+    // Helper untuk menutup modal konfirmasi hapus
+    function tutupModalHapus() {
+        document.getElementById('modalHapus').style.display = 'none';
+    }
+
+    function filterMaster() {
+        const keyword = document.getElementById('inputCari').value.toLowerCase();
+        const filtered = listMasterObat.filter(o => o.nama.toLowerCase().includes(keyword) || o.kategori.toLowerCase().includes(keyword));
+        renderTabelMaster(filtered);
+    }
+
+    function bukaModalTambah() {
+        document.getElementById('modalTitle').innerText = "Tambah Obat Baru";
+        document.getElementById('obatId').value = "";
+        document.getElementById('namaObat').value = "";
+        document.getElementById('kategoriObat').value = "Umum";
+        document.getElementById('hargaJual').value = "0";
+        document.getElementById('fileGambar').value = "";
+        document.getElementById('modalMaster').style.display = 'flex';
+    }
+
+    function editMaster(id, nama, kategori, harga) {
+        document.getElementById('modalTitle').innerText = "Edit Master Obat";
+        document.getElementById('obatId').value = id;
+        document.getElementById('namaObat').value = nama;
+        document.getElementById('kategoriObat').value = kategori;
+        document.getElementById('hargaJual').value = harga;
+        document.getElementById('fileGambar').value = "";
+        document.getElementById('modalMaster').style.display = 'flex';
+    }
+
+    async function simpanMasterObat(event) {
+        event.preventDefault();
+        const id = document.getElementById('obatId').value;
+        const nama = document.getElementById('namaObat').value;
+        const kategori = document.getElementById('kategoriObat').value;
+        const harga_jual = parseInt(document.getElementById('hargaJual').value) || 0;
+        const fileInput = document.getElementById('fileGambar');
+
+        let urlGambarFinal = "";
+        if (fileInput.files.length > 0) {
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+            const uploadRes = await fetch('http://127.0.0.1:8000/upload-gambar', { method: 'POST', body: formData });
+            const uploadResJson = await uploadRes.json();
+            if (uploadRes.ok) {
+                urlGambarFinal = uploadResJson.url_gambar;
+            }
+        }
+
+        // Payload data master
+        const payload = {
+            nama: nama,
+            kategori: kategori,
+            harga_jual: harga_jual,
+            ...(urlGambarFinal && { gambar: urlGambarFinal })
+        };
+
+        let endpoint = 'http://127.0.0.1:8000/obat';
+        let method = 'POST';
+
+        if (id) {
+            endpoint = `http://127.0.0.1:8000/obat/${id}`;
+            method = 'PUT'; // Atau PATCH sesuai backend Anda
+        }
+
+        const response = await fetch(endpoint, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            tutupModal();
+            muatMasterObat();
+        } else {
+            alert("Gagal menyimpan master obat.");
+        }
+    }
+
+    window.onload = muatMasterObat;
+</script>
+<!-- Modal Konfirmasi Hapus -->
+<div id="modalHapus" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <div style="font-size: 45px; color: #e74c3c; margin-bottom: 10px;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <h3 style="margin-top: 0; color: #2c3e50;">Konfirmasi Hapus</h3>
+        <p style="color: #555; font-size: 14px; margin-bottom: 20px;">Apakah Anda yakin ingin menghapus obat ini dari master? Tindakan ini tidak dapat dibatalkan.</p>
+        <input type="hidden" id="idObatDihapus">
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button type="button" onclick="tutupModalHapus()" style="background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Batal</button>
+            <button type="button" onclick="eksekusiHapus()" style="background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Ya, Hapus</button>
+        </div>
+    </div>
+</div>
+<!-- Modal Peringatan Error / Gagal -->
+<div id="modalAlert" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <div style="font-size: 45px; color: #e67e22; margin-bottom: 10px;"><i class="fa-solid fa-circle-exclamation"></i></div>
+        <h3 style="margin-top: 0; color: #2c3e50;" id="alertTitle">Peringatan</h3>
+        <p style="color: #555; font-size: 14px; margin-bottom: 20px;" id="alertMessage">Terjadi kesalahan.</p>
+        <button type="button" onclick="tutupModalAlert()" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">OK</button>
+    </div>
+</div>
+</body>
+</html>

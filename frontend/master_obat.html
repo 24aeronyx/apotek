@@ -49,10 +49,10 @@
             <thead>
                 <tr>
                     <th style="width: 8%;">Gambar</th>
-                    <th style="width: 35%;">Nama Obat</th>
-                    <th style="width: 20%;">Kategori</th>
-                    <th style="width: 20%;">Harga Jual Standar</th>
-                    <th style="width: 10%; text-align: center;">Total Stok</th>
+                    <th style="width: 30%;">Nama Obat</th>
+                    <th style="width: 15%;">Kategori</th>
+                    <th style="width: 18%;">Harga Jual</th>
+                    <th style="width: 12%; text-align: center;">Total Stok</th>
                     <th style="width: 17%; text-align: center;">Aksi</th>
                 </tr>
             </thead>
@@ -70,8 +70,8 @@
         <form id="formMaster" onsubmit="simpanMasterObat(event)">
             <input type="hidden" id="obatId">
             <div class="form-group">
-                <label>Nama Obat: <span style="color: red;">*</span></label>
-                <input type="text" id="namaObat" class="form-control" placeholder="Contoh: Paracetamol 500mg" required>
+                <label>Nama Obat (Beserta Merk/Pabrik): <span style="color: red;">*</span></label>
+                <input type="text" id="namaObat" class="form-control" placeholder="Contoh: Amoxilin 500mg - Pharos" required>
             </div>
             <div class="form-group">
                 <label>Kategori: <span style="color: red;">*</span></label>
@@ -87,9 +87,6 @@
             </div>
             
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
-                <!-- Tombol Hapus (Hanya muncul saat mode Edit) -->
-                <button type="button" id="btnHapusObat" onclick="hapusMasterObat()" style="background: #e74c3c; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; display: none;"><i class="fa-solid fa-trash"></i> Hapus</button>
-                
                 <div style="display: flex; gap: 10px; margin-left: auto;">
                     <button type="button" onclick="tutupModal()" style="background: #95a5a6; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">Batal</button>
                     <button type="submit" style="background: #2ecc71; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Simpan</button>
@@ -99,12 +96,66 @@
     </div>
 </div>
 
+<!-- Modal Pantau Batch & Expired Date -->
+<div id="modalBatch" class="modal-overlay">
+    <div class="modal-content" style="max-width: 650px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+            <!-- PERBAIKAN ID DI SINI -->
+            <h3 id="judulDetailBatch" style="margin: 0; color: #2c3e50;"><i class="fa-solid fa-layer-group" style="color: #3498db;"></i> Rincian Batch & Kedaluwarsa</h3>
+            <button class="close-btn" onclick="tutupModalBatch()" style="background: none; border: none; font-size: 22px; cursor: pointer; color: #7f8c8d;">&times;</button>
+        </div>
+        
+        <div style="max-height: 350px; overflow-y: auto;">
+            <table class="table-master" style="margin-top: 0;" id="tabelRincianBatch">
+                <thead>
+                    <tr>
+                        <th>No. Faktur / Batch</th>
+                        <th>Sisa Stok</th>
+                        <th>Harga Modal (Beli)</th>
+                        <th>Tgl. Kedaluwarsa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data batch akan dimuat di sini -->
+                </tbody>
+            </table>
+        </div>
+        <div style="text-align: right; margin-top: 20px;">
+            <button type="button" onclick="tutupModalBatch()" style="background: #3498db; color: white; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-weight: bold;">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Konfirmasi Hapus -->
+<div id="modalHapus" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <div style="font-size: 45px; color: #e74c3c; margin-bottom: 10px;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <h3 style="margin-top: 0; color: #2c3e50;">Konfirmasi Hapus</h3>
+        <p style="color: #555; font-size: 14px; margin-bottom: 20px;">Apakah Anda yakin ingin menghapus obat ini dari master?</p>
+        <input type="hidden" id="idObatDihapus">
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button type="button" onclick="tutupModalHapus()" style="background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Batal</button>
+            <button type="button" onclick="eksekusiHapus()" style="background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Ya, Hapus</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Peringatan Error -->
+<div id="modalAlert" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <div style="font-size: 45px; color: #e67e22; margin-bottom: 10px;"><i class="fa-solid fa-circle-exclamation"></i></div>
+        <h3 style="margin-top: 0; color: #2c3e50;" id="alertTitle">Peringatan</h3>
+        <p style="color: #555; font-size: 14px; margin-bottom: 20px;" id="alertMessage">Terjadi kesalahan.</p>
+        <button type="button" onclick="tutupModalAlert()" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">OK</button>
+    </div>
+</div>
+
 <script>
     let listMasterObat = [];
 
     async function muatMasterObat() {
         try {
-            const response = await fetch('http://127.0.0.1:8000/obat'); // Mengambil data dari endpoint master obat backend
+            const response = await fetch('http://127.0.0.1:8000/obat');
             listMasterObat = await response.json();
             renderTabelMaster(listMasterObat);
         } catch (error) {
@@ -128,8 +179,10 @@
                 tampilanGambar = `<img src="${obat.gambar}" class="img-thumb" alt="${obat.nama}">`;
             }
 
-            // Tampilkan total stok (jika backend mengirimkan atribut total_stok)
             let stokBadge = `<span style="font-weight: bold; color: ${obat.total_stok > 0 ? '#27ae60' : '#e74c3c'};">${obat.total_stok || 0}</span>`;
+
+            // Simpan data batches ke dalam bentuk string JSON agar bisa dipanggil lewat fungsi detail
+            const batchesJSON = encodeURIComponent(JSON.stringify(obat.batches || []));
 
             tbody.innerHTML += `
                 <tr>
@@ -138,13 +191,46 @@
                     <td>${obat.kategori}</td>
                     <td>Rp ${(obat.harga_jual || 0).toLocaleString('id-ID')}</td>
                     <td style="text-align: center;">${stokBadge}</td>
-                    <td style="text-align: center; display: flex; justify-content: center; gap: 6px;">
-                        <button type="button" onclick="editMaster(${obat.id}, '${obat.nama}', '${obat.kategori}', ${obat.harga_jual})" style="background: #f39c12; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;" title="Edit"><i class="fa-solid fa-pen"></i></button>
-                        <button type="button" onclick="hapusMasterObat(${obat.id})" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                    <td style="text-align: center;">
+                        <div style="display: flex; justify-content: center; gap: 5px;">
+                            <button type="button" onclick="bukaModalBatch('${obat.nama}', '${batchesJSON}')" style="background: #3498db; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;" title="Pantau Batch & Expired"><i class="fa-solid fa-eye"></i></button>
+                            <button type="button" onclick="editMaster(${obat.id}, '${obat.nama}', '${obat.kategori}', ${obat.harga_jual})" style="background: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                            <button type="button" onclick="hapusMasterObat(${obat.id})" style="background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                        </div>
                     </td>
                 </tr>
             `;
         });
+    }
+
+    // Fungsi untuk membuka modal rincian batch obat tertentu
+    function bukaModalBatch(namaObat, batchesJSON) {
+        // PERBAIKAN PENULISAN JAVASCRIPT DI SINI (Tanpa titik sebelum innerHTML)
+        document.getElementById('judulDetailBatch').innerHTML = `<i class="fa-solid fa-layer-group" style="color: #3498db;"></i> Rincian Batch: ${namaObat}`;
+        
+        const batches = JSON.parse(decodeURIComponent(batchesJSON));
+        const tbody = document.querySelector('#tabelRincianBatch tbody');
+        tbody.innerHTML = '';
+
+        if (batches.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 15px; color: #7f8c8d;">Belum ada stok batch yang masuk untuk obat ini.</td></tr>';
+        } else {
+            batches.forEach(b => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>#${b.nomor_batch || '-'}</strong></td>
+                        <td><span style="color: #27ae60; font-weight: bold;">${b.jumlah_stok} Unit</span></td>
+                        <td>Rp ${(b.harga_beli || 0).toLocaleString('id-ID')}</td>
+                        <td><span style="background: #fdf2f2; color: #c0392b; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 13px;"><i class="fa-regular fa-calendar-days"></i> ${b.tanggal_kedaluwarsa}</span></td>
+                    </tr>
+                `;
+            });
+        }
+        document.getElementById('modalBatch').style.display = 'flex';
+    }
+
+    function tutupModalBatch() {
+        document.getElementById('modalBatch').style.display = 'none';
     }
 
     function hapusMasterObat(id) {
@@ -152,7 +238,6 @@
         document.getElementById('modalHapus').style.display = 'flex';
     }
 
-    // Fungsi untuk menampilkan modal alert kustom
     function tampilkanAlert(judul, pesan) {
         document.getElementById('alertTitle').innerText = judul;
         document.getElementById('alertMessage').innerText = pesan;
@@ -163,25 +248,17 @@
         document.getElementById('modalAlert').style.display = 'none';
     }
 
-    // Eksekusi penghapusan dengan modal alert kustom
     async function eksekusiHapus() {
         const id = document.getElementById('idObatDihapus').value;
         if (!id) return;
-
-        // Tutup modal konfirmasi hapus terlebih dahulu
         tutupModalHapus();
 
         try {
-            const response = await fetch(`http://127.0.0.1:8000/obat/${id}`, {
-                method: 'DELETE'
-            });
-
+            const response = await fetch(`http://127.0.0.1:8000/obat/${id}`, { method: 'DELETE' });
             const result = await response.json();
-
             if (response.ok) {
                 muatMasterObat();
             } else {
-                // Munculkan pesan error asli dari backend (misal: terikat dengan data batch)
                 tampilkanAlert("Gagal Menghapus", result.detail || 'Obat masih terikat dengan data batch atau transaksi.');
             }
         } catch (error) {
@@ -189,7 +266,6 @@
         }
     }
 
-    // Helper untuk menutup modal konfirmasi hapus
     function tutupModalHapus() {
         document.getElementById('modalHapus').style.display = 'none';
     }
@@ -243,7 +319,6 @@
             }
         }
 
-        // Payload data master
         const payload = {
             nama: nama,
             kategori: kategori,
@@ -256,7 +331,7 @@
 
         if (id) {
             endpoint = `http://127.0.0.1:8000/obat/${id}`;
-            method = 'PUT'; // Atau PATCH sesuai backend Anda
+            method = 'PUT';
         }
 
         const response = await fetch(endpoint, {
@@ -275,30 +350,6 @@
 
     window.onload = muatMasterObat;
 </script>
-
-<!-- Modal Konfirmasi Hapus -->
-<div id="modalHapus" class="modal-overlay">
-    <div class="modal-content" style="max-width: 400px; text-align: center;">
-        <div style="font-size: 45px; color: #e74c3c; margin-bottom: 10px;"><i class="fa-solid fa-triangle-exclamation"></i></div>
-        <h3 style="margin-top: 0; color: #2c3e50;">Konfirmasi Hapus</h3>
-        <p style="color: #555; font-size: 14px; margin-bottom: 20px;">Apakah Anda yakin ingin menghapus obat ini dari master? Tindakan ini tidak dapat dibatalkan.</p>
-        <input type="hidden" id="idObatDihapus">
-        <div style="display: flex; gap: 10px; justify-content: center;">
-            <button type="button" onclick="tutupModalHapus()" style="background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Batal</button>
-            <button type="button" onclick="eksekusiHapus()" style="background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Ya, Hapus</button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Peringatan Error / Gagal -->
-<div id="modalAlert" class="modal-overlay">
-    <div class="modal-content" style="max-width: 400px; text-align: center;">
-        <div style="font-size: 45px; color: #e67e22; margin-bottom: 10px;"><i class="fa-solid fa-circle-exclamation"></i></div>
-        <h3 style="margin-top: 0; color: #2c3e50;" id="alertTitle">Peringatan</h3>
-        <p style="color: #555; font-size: 14px; margin-bottom: 20px;" id="alertMessage">Terjadi kesalahan.</p>
-        <button type="button" onclick="tutupModalAlert()" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">OK</button>
-    </div>
-</div>
 
 </body>
 </html>

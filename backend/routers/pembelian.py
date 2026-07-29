@@ -16,12 +16,13 @@ def tambah_pembelian_stok(data: PembelianCreate):
         if not medicine:
             raise HTTPException(status_code=404, detail="Obat tidak ditemukan di master data")
 
-        # Buat batch baru untuk mendukung FEFO
+        # Buat batch baru dengan menyertakan nomor_batch dan harga_beli
         new_batch = InventoryBatch(
             medicine_id=data.medicine_id,
+            nomor_batch=data.nomor_batch,       # <-- Disimpan ke database
             jumlah_stok=data.jumlah_stok,
+            harga_beli=data.harga_beli,         # <-- Disimpan ke database
             tanggal_kedaluwarsa=data.tanggal_kedaluwarsa
-            # Catatan: Jika model Anda memiliki kolom nomor_batch atau harga_beli, bisa disertakan di sini.
         )
         
         db.add(new_batch)

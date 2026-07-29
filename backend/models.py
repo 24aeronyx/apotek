@@ -46,9 +46,11 @@ class InventoryBatch(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     medicine_id = Column(Integer, ForeignKey("medicines.id"))
+    nomor_batch = Column(String(100), nullable=True)  
     jumlah_stok = Column(Integer, default=0)
-    tanggal_kedaluwarsa = Column(Date) # Sangat penting untuk sistem FEFO
-    
+    harga_beli = Column(Integer, default=0)     
+    tanggal_kedaluwarsa = Column(Date)              
+
     medicine = relationship("Medicine", back_populates="batches")
     
 class Sale(Base):

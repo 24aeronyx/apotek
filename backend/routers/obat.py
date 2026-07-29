@@ -13,16 +13,14 @@ def cari_obat():
         medicines = db.query(Medicine).all()
         hasil = []
         for m in medicines:
-            # Hitung total stok dari semua batch yang dimiliki obat ini
-            total_stok = sum(batch.jumlah_stok for batch in m.batches)
-            
+            total_stok = sum(batch.jumlah_stok for batch in m.batches) if m.batches else 0
             hasil.append({
                 "id": m.id,
                 "nama": m.nama,
                 "kategori": m.kategori,
                 "harga": m.harga_jual,
-                "stok": total_stok, # <-- Total stok gabungan dari inventory_batches
-                "gambar": m.gambar if m.gambar else "https://via.placeholder.com/150" # <-- Kirim URL gambar
+                "stok": total_stok,
+                "gambar": m.gambar if m.gambar else "https://via.placeholder.com/150"
             })
         return hasil
     finally:
@@ -32,47 +30,55 @@ def cari_obat():
 def get_all_medicines():
     db = SessionLocal()
     try:
-        # Gunakan options(joinedload(Medicine.batches)) agar relasi batch ikut terbawa
-        medicines = db.query(Medicine).options(joinedload(Medicine.batches)).all()
+        medicines = db.query(Medicine).options(joinedload(Medicine.batches)).order_by(Medicine.nama.asc()).all()
         
         hasil = []
         for m in medicines:
-            # Sekarang m.batches sudah terisi dengan benar karena joinedload
             total_stok = sum(batch.jumlah_stok for batch in m.batches) if m.batches else 0
             
+            list_batch = []
+            if m.batches:
+                for b in m.batches:
+                    list_batch.append({
+                        "id": b.id,
+                        "nomor_batch": b.nomor_batch if hasattr(b, 'nomor_batch') else "-", # Pastikan terbaca
+                        "jumlah_stok": b.jumlah_stok,
+                        "harga_beli": b.harga_beli if hasattr(b, 'harga_beli') else 0,
+                        "tanggal_kedaluwarsa": str(b.tanggal_kedaluwarsa)
+                    })
+
             hasil.append({
                 "id": m.id,
                 "nama": m.nama,
                 "kategori": m.kategori,
                 "harga_jual": m.harga_jual,
                 "total_stok": total_stok,
-                "gambar": m.gambar if m.gambar else ""
+                "gambar": m.gambar if m.gambar else "",
+                "batches": list_batch
             })
         return hasil
     finally:
         db.close()
 
 
-# 2. Endpoint untuk menambah Master Obat baru
-@router.get("/obat")
-def get_all_medicines():
+# --- TAMBAHKAN ENDPOINT POST INI AGAR BISA MENAMBAH OBAT BARU ---
+@router.post("/obat", status_code=status.HTTP_201_CREATED)
+def create_medicine(data: MedicineCreate):
     db = SessionLocal()
     try:
-        medicines = db.query(Medicine).all()
-        hasil = []
-        for m in medicines:
-            # Hitung total stok dari seluruh batch yang terikat ke obat ini
-            total_stok = sum(batch.jumlah_stok for batch in m.batches)
-            
-            hasil.append({
-                "id": m.id,
-                "nama": m.nama,
-                "kategori": m.kategori,
-                "harga_jual": m.harga_jual,
-                "total_stok": total_stok, # <-- Kirim data stok ke frontend
-                "gambar": m.gambar if m.gambar else ""
-            })
-        return hasil
+        new_medicine = Medicine(
+            nama=data.nama,
+            kategori=data.kategori,
+            harga_jual=data.harga_jual,
+            gambar=data.gambar if hasattr(data, 'gambar') else None
+        )
+        db.add(new_medicine)
+        db.commit()
+        db.refresh(new_medicine)
+        return {"message": "Master obat berhasil ditambahkan", "id": new_medicine.id}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
     finally:
         db.close()
 

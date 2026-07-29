@@ -283,12 +283,18 @@ function hapusItem(index) {
 }
 
 async function prosesTransaksi() {
-  if (keranjang.length === 0) return alert("Keranjang masih kosong!");
+  const pesanDiv = document.getElementById("pesan");
+  pesanDiv.style.display = "block";
+
+  if (keranjang.length === 0) {
+    pesanDiv.style.background = "#f8d7da";
+    pesanDiv.style.color = "#721c24";
+    pesanDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Keranjang masih kosong!';
+    return;
+  }
 
   const kasirAktif = localStorage.getItem("user_apotek") || "admin";
 
-  const pesanDiv = document.getElementById("pesan");
-  pesanDiv.style.display = "block";
   pesanDiv.style.background = "#f1c40f";
   pesanDiv.style.color = "black";
   pesanDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses transaksi...';
@@ -336,7 +342,7 @@ async function prosesTransaksi() {
       renderTabelKeranjang();
       await muatDaftarObat();
 
-      setTimeout(() => toggleModal(false), 1000);
+      setTimeout(() => toggleModal(false), 1200);
     } else {
       pesanDiv.style.background = "#f8d7da";
       pesanDiv.style.color = "#721c24";

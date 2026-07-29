@@ -344,7 +344,8 @@
             tutupModal();
             muatMasterObat();
         } else {
-            alert("Gagal menyimpan master obat.");
+            const errJson = await response.json().catch(() => ({}));
+            tampilkanAlert("Gagal Menyimpan", errJson.detail || "Gagal menyimpan master obat.");
         }
     }
 

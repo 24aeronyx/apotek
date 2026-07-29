@@ -14,6 +14,10 @@
         .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
         .btn-simpan { background: #2ecc71; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; margin-top: 10px; }
         .btn-simpan:hover { background: #27ae60; }
+        
+        /* Modal Kustom Bersih Tanpa Alert Bawaan Browser */
+        .modal-overlay { display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; }
     </style>
 </head>
 <body>
@@ -64,7 +68,37 @@
     </div>
 </div>
 
+<!-- Modal Kustom untuk Peringatan / Pesan -->
+<div id="modalAlert" class="modal-overlay">
+    <div class="modal-content">
+        <div id="alertIcon" style="font-size: 45px; color: #2ecc71; margin-bottom: 10px;"><i class="fa-solid fa-circle-check"></i></div>
+        <h3 style="margin-top: 0; color: #2c3e50;" id="alertTitle">Informasi</h3>
+        <p style="color: #555; font-size: 14px; margin-bottom: 20px;" id="alertMessage">Pesan informasi.</p>
+        <button type="button" onclick="tutupModalAlert()" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">OK</button>
+    </div>
+</div>
+
 <script>
+    function tampilkanAlert(judul, pesan, tipe = "sukses") {
+        document.getElementById('alertTitle').innerText = judul;
+        document.getElementById('alertMessage').innerText = pesan;
+        
+        const iconDiv = document.getElementById('alertIcon');
+        if (tipe === "sukses") {
+            iconDiv.style.color = "#2ecc71";
+            iconDiv.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+        } else {
+            iconDiv.style.color = "#e67e22";
+            iconDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+        }
+
+        document.getElementById('modalAlert').style.display = 'flex';
+    }
+
+    function tutupModalAlert() {
+        document.getElementById('modalAlert').style.display = 'none';
+    }
+
     // 1. Muat daftar obat ke dropdown saat halaman dibuka
     async function muatDropdownObat() {
         try {
@@ -78,7 +112,7 @@
             });
         } catch (error) {
             console.error("Gagal memuat master obat:", error);
-            alert("Gagal terhubung ke server untuk memuat master obat.");
+            tampilkanAlert("Kesalahan Koneksi", "Gagal terhubung ke server untuk memuat master obat.", "error");
         }
     }
 
@@ -104,13 +138,13 @@
             const result = await response.json();
 
             if (response.ok) {
-                alert("Stok berhasil ditambahkan ke batch baru!");
+                tampilkanAlert("Berhasil", "Stok berhasil ditambahkan ke batch baru!", "sukses");
                 document.getElementById('formPembelian').reset();
             } else {
-                alert("Gagal menyimpan: " + (result.detail || 'Terjadi kesalahan'));
+                tampilkanAlert("Gagal Menyimpan", result.detail || 'Terjadi kesalahan pada sistem.', "error");
             }
         } catch (error) {
-            alert("Gagal terhubung ke server backend!");
+            tampilkanAlert("Kesalahan Koneksi", "Gagal terhubung ke server backend!", "error");
         }
     }
 

@@ -23,6 +23,10 @@
         .btn-export-pdf:hover { background: #a93226; }
         .filter-container { display: flex; gap: 15px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; background: #f8f9fa; padding: 15px; border-radius: 8px; }
 
+        /* Modal Kustom Bersih Tanpa Alert Bawaan Browser */
+        .modal-overlay { display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; }
+
         /* Pengaturan khusus saat cetak ke PDF */
        @media print {
             body { background: white; }
@@ -136,16 +140,35 @@
 
 </div>
 
+<!-- Modal Kustom untuk Peringatan / Pesan -->
+<div id="modalAlert" class="modal-overlay">
+    <div class="modal-content">
+        <div style="font-size: 45px; color: #e67e22; margin-bottom: 10px;"><i class="fa-solid fa-circle-exclamation"></i></div>
+        <h3 style="margin-top: 0; color: #2c3e50;" id="alertTitle">Peringatan</h3>
+        <p style="color: #555; font-size: 14px; margin-bottom: 20px;" id="alertMessage">Pesan informasi.</p>
+        <button type="button" onclick="tutupModalAlert()" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">OK</button>
+    </div>
+</div>
+
 <script>
     let chartInstance = null;
 
-    // Set default filter bulan dan tahun sesuai waktu saat ini saat pertama kali buka
     window.onload = function() {
         const sekarang = new Date();
         document.getElementById('filterBulan').value = sekarang.getMonth() + 1;
         document.getElementById('filterTahun').value = sekarang.getFullYear();
         muatDashboard();
     };
+
+    function tampilkanAlert(judul, pesan) {
+        document.getElementById('alertTitle').innerText = judul;
+        document.getElementById('alertMessage').innerText = pesan;
+        document.getElementById('modalAlert').style.display = 'flex';
+    }
+
+    function tutupModalAlert() {
+        document.getElementById('modalAlert').style.display = 'none';
+    }
 
     async function muatDashboard() {
         try {
@@ -165,7 +188,6 @@
 
             const namaBulanList = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
-            // Filter data berdasarkan pilihan dropdown bulan dan tahun
             const dataBulanIni = data.filter(item => {
                 if (!item.waktu) return false;
                 const parts = item.waktu.split(' ')[0].split('-');
@@ -196,12 +218,10 @@
             dataBulanIni.forEach(item => {
                 totalItemTerjual += item.total_item;
                 totalOmzet += item.grand_total || 0;
-                
-                // Jika backend mengirimkan perkiraan laba per item/transaksi
                 let labaTransaksi = item.estimasi_laba || 0; 
                 totalLabaBersih += labaTransaksi;
 
-                let tanggalSaja = item.waktu.split(' ')[0]; // format YYYY-MM-DD
+                let tanggalSaja = item.waktu.split(' ')[0];
                 if (!groupedDataPerHari[tanggalSaja]) {
                     groupedDataPerHari[tanggalSaja] = 0;
                 }
@@ -224,12 +244,8 @@
             document.getElementById('statTotalOmzet').innerText = 'Rp ' + totalOmzet.toLocaleString('id-ID');
             document.getElementById('statTotalLaba').innerText = 'Rp ' + totalLabaBersih.toLocaleString('id-ID');
 
-            // URUTKAN TANGGAL DARI KIRI KE KANAN (Kronologis / Ascending)
             let sortedDates = Object.keys(groupedDataPerHari).sort((a, b) => new Date(a) - new Date(b));
-            let chartLabels = sortedDates;
-            let chartDataOmzet = sortedDates.map(date => groupedDataPerHari[date]);
-
-            renderGrafikOmzet(chartLabels, chartDataOmzet);
+            renderGrafikOmzet(sortedDates, sortedDates.map(date => groupedDataPerHari[date]));
 
         } catch (error) {
             console.error("Gagal memuat dashboard:", error);
@@ -239,10 +255,7 @@
 
     function renderGrafikOmzet(labels, dataOmzet) {
         const ctx = document.getElementById('chartOmzet').getContext('2d');
-
-        if (chartInstance) {
-            chartInstance.destroy();
-        }
+        if (chartInstance) chartInstance.destroy();
 
         chartInstance = new Chart(ctx, {
             type: 'line',
@@ -261,11 +274,7 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
+                scales: { y: { beginAtZero: true } }
             }
         });
     }
@@ -286,40 +295,41 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        // --- 1. KOP SURAT / BRANDING APOTEK ---
-        doc.setFontSize(18);
-        doc.setTextColor(41, 128, 185); // Warna biru elegan
-        doc.text("APOTEK SEHAT MANDIRI", 14, 18); // Ganti dengan nama apotek Anda
+        // --- 1. KOP SURAT / BRANDING PROFESIONAL ---
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.setTextColor(41, 128, 185);
+        doc.text("APOTEK SEHAT MANDIRI", 14, 18);
 
-        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
         doc.setTextColor(127, 140, 141);
-        doc.text("Jl. Kesehatan No. 123, Telp: (021) 555-0199", 14, 24);
-        doc.text("Email: info@apoteksehatmandiri.com", 14, 29);
+        doc.text("Jl. Kesehatan Raya No. 88, Telp: (021) 555-8989", 14, 24);
+        doc.text("Email: support@apoteksehatmandiri.com | Website: www.apoteksehatmandiri.com", 14, 29);
 
         // Garis Pembatas Kop Surat
-        doc.setLineWidth(0.5);
-        doc.setDrawColor(189, 195, 199);
+        doc.setLineWidth(0.8);
+        doc.setDrawColor(41, 128, 185);
         doc.line(14, 33, 196, 33);
 
-        // --- 2. JUDUL LAPORAN & INFORMASI WAKTU ---
-        doc.setFontSize(14);
+        // --- 2. JUDUL LAPORAN & PERIODE ---
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(13);
         doc.setTextColor(44, 62, 80);
-        doc.text("Laporan Riwayat Penjualan & Keuangan", 14, 42);
+        doc.text("LAPORAN RINGKASAN KEUANGAN & PENJUALAN", 14, 42);
 
         const bulanPilih = document.getElementById('filterBulan').options[document.getElementById('filterBulan').selectedIndex].text;
         const tahunPilih = document.getElementById('filterTahun').value;
         
+        doc.setFont("helvetica", "normal");
         doc.setFontSize(10);
         doc.setTextColor(52, 73, 94);
-        doc.text(`Periode: ${bulanPilih} ${tahunPilih}`, 14, 48);
-        doc.text("Dicetak pada: " + new Date().toLocaleString('id-ID'), 14, 54);
+        doc.text(`Periode Laporan : ${bulanPilih} ${tahunPilih}`, 14, 48);
+        doc.text(`Waktu Cetak       : ${new Date().toLocaleString('id-ID')}`, 14, 54);
 
         // --- 3. AMBIL DATA DARI TABEL HTML ---
         const headers = [["ID Nota", "Kasir", "Waktu Transaksi", "Jumlah Item", "Grand Total", "Perkiraan Laba"]];
         const data = [];
-
-        let totalOmzetPDF = 0;
-        let totalLabaPDF = 0;
 
         const rows = document.querySelectorAll("#tabelLaporan tbody tr");
         rows.forEach(row => {
@@ -337,46 +347,45 @@
         });
 
         if (data.length === 0) {
-            alert("Tidak ada data untuk diexport ke PDF!");
+            tampilkanAlert("Informasi Ekspor", "Tidak ada data riwayat penjualan pada periode ini untuk diexport ke PDF.");
             return;
         }
 
-        // --- 4. PEMBUATAN TABEL DENGAN JSPDF-AUTOTABLE ---
+        // --- 4. TABEL UTAMA DENGAN AUTOTABLE ---
         doc.autoTable({
             head: headers,
             body: data,
             startY: 60,
             theme: 'grid',
             headStyles: { fillColor: [41, 128, 185], textColor: [255, 255, 255], fontStyle: 'bold' },
-            styles: { fontSize: 9, cellPadding: 5 },
+            styles: { fontSize: 9, cellPadding: 5, textColor: [44, 62, 80] },
             columnStyles: {
-                4: { halign: 'right' },
-                5: { halign: 'right' }
+                4: { halign: 'right', fontStyle: 'bold' },
+                5: { halign: 'right', fontStyle: 'bold', textColor: [39, 174, 96] }
             }
         });
 
         // --- 5. TANDA TANGAN / OTORISASI DI BAGIAN BAWAH ---
         let finalY = doc.lastAutoTable.finalY + 15;
         
-        // Cek jika posisi tanda tangan hampir tembus halaman bawah, buat halaman baru jika perlu
-        if (finalY > 250) {
+        if (finalY > 240) {
             doc.addPage();
             finalY = 20;
         }
 
         const pageWidth = doc.internal.pageSize.getWidth();
         
+        doc.setFont("helvetica", "normal");
         doc.setFontSize(10);
         doc.setTextColor(44, 62, 80);
         doc.text("Mengetahui,", pageWidth - 50, finalY, { align: "center" });
-        doc.text("Penanggung Jawab / Apoteker", pageWidth - 50, finalY + 6, { align: "center" });
+        doc.text("Penanggung Jawab / Apoteker", pageWidth - 50, finalY + 5, { align: "center" });
         
-        // Garis tanda tangan
-        doc.line(pageWidth - 75, finalY + 25, pageWidth - 25, finalY + 25);
+        doc.line(pageWidth - 75, finalY + 28, pageWidth - 25, finalY + 28);
         
-        doc.text("( .......................................... )", pageWidth - 50, finalY + 30, { align: "center" });
+        doc.text("( .......................................... )", pageWidth - 50, finalY + 33, { align: "center" });
 
-        // --- 6. BUKA PREVIEW PDF DI TAB BARU ---
+        // --- 6. PREVIEW PDF DI TAB BARU ---
         const pdfBlobUrl = doc.output('bloburl');
         window.open(pdfBlobUrl, '_blank');
     }

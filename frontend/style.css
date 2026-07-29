@@ -61,3 +61,21 @@ th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ecf0f1; }
     #areaStruk, #areaStruk * { visibility: visible; }
     #areaStruk { display: block !important; position: absolute; top: 0; left: 0; width: 100%; }
 }
+
+/* Membuat input angka di kartu produk terlihat menyatu tanpa garis kotak */
+.qty-input-custom {
+    background: transparent;
+    border: none;
+    outline: none;
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
+    width: 35px;
+    color: #2c3e50;
+}
+/* Menghilangkan panah naik-turun (spinner) bawaan input number agar lebih rapi */
+.qty-input-custom::-webkit-inner-spin-button, 
+.qty-input-custom::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+}

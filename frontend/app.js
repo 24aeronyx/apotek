@@ -78,7 +78,11 @@ function renderGrid(data) {
         
         <div class="qty-control">
             <button class="btn-qty" onclick="ubahQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, -1, ${obat.stok})" ${qtySekarang === 0 ? "disabled" : ""}><i class="fa-solid fa-minus"></i></button>
-            <span class="qty-angka">${qtySekarang}</span>
+            
+            <!-- Menggunakan class CSS kustom agar tampilannya menyatu seperti teks asli -->
+            <input type="number" class="qty-input-custom" value="${qtySekarang}" min="0" max="${obat.stok}" 
+                   oninput="ketikQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, this.value, ${obat.stok})">
+                   
             <button class="btn-qty" onclick="ubahQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, 1, ${obat.stok})" ${stokTersedia <= 0 ? "disabled" : ""}><i class="fa-solid fa-plus"></i></button>
         </div>
     `;
@@ -139,6 +143,54 @@ function renderTabelKeranjang() {
   document.getElementById("grandTotal").innerText = formatRupiah(grandTotal);
 }
 
+function ketikQtyCard(id, nama, harga, nilaiBaru, maxStok) {
+  const indexAda = keranjang.findIndex((item) => item.id_obat === id);
+
+  // Jika dikosongkan sementara (sedang mengetik / menghapus)
+  if (nilaiBaru === "" || nilaiBaru === null) {
+    if (indexAda > -1) {
+      keranjang.splice(indexAda, 1);
+    }
+    updateNotifikasiKeranjang();
+    renderTabelKeranjang();
+    return;
+  }
+
+  let jumlahBaru = parseInt(nilaiBaru);
+  if (isNaN(jumlahBaru) || jumlahBaru < 0) jumlahBaru = 0;
+
+  // Validasi agar tidak melebihi sisa stok
+  if (jumlahBaru > maxStok) {
+    alert("Jumlah melebihi sisa stok yang tersedia!");
+    jumlahBaru = maxStok;
+    event.target.value = maxStok;
+  }
+
+  if (jumlahBaru === 0) {
+    if (indexAda > -1) {
+      keranjang.splice(indexAda, 1);
+    }
+  } else {
+    if (indexAda > -1) {
+      keranjang[indexAda].jumlah = jumlahBaru;
+    } else {
+      keranjang.push({ id_obat: id, nama: nama, harga: harga, jumlah: jumlahBaru });
+    }
+  }
+
+  updateNotifikasiKeranjang();
+  renderTabelKeranjang();
+}
+
+// Tambahkan fungsi pendukung ini agar saat kotak input diklik lalu dikosongkan/ditinggal (blur), otomatis berubah jadi angka 0
+document.addEventListener("blur", function(event) {
+  if (event.target.classList.contains("qty-input-custom")) {
+    if (event.target.value === "") {
+      event.target.value = "0";
+    }
+  }
+}, true);
+
 function ubahQtyCard(id, nama, harga, perubahan, maxStok) {
   const indexAda = keranjang.findIndex((item) => item.id_obat === id);
 
@@ -164,13 +216,62 @@ function ubahQtyCard(id, nama, harga, perubahan, maxStok) {
   filterObat();
 }
 
+function renderTabelKeranjang() {
+  const tbody = document.querySelector("#tabelKeranjang tbody");
+  tbody.innerHTML = "";
+
+  if (keranjang.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="4" style="text-align:center;">Keranjang kosong</td></tr>';
+    document.getElementById("grandTotal").innerText = formatRupiah(0);
+    return;
+  }
+
+  let grandTotal = 0;
+
+  keranjang.forEach((item, index) => {
+    let subtotal = item.harga * item.jumlah;
+    grandTotal += subtotal;
+
+    tbody.innerHTML += `
+        <tr>
+            <td><strong>${item.nama}</strong><br><small>${formatRupiah(item.harga)}</small></td>
+            <td>
+                <!-- Gunakan oninput agar setiap ketikan langsung merespon tanpa harus kehilangan fokus -->
+                <input type="number" value="${item.jumlah}" min="1" 
+                       style="width: 60px; padding: 6px; text-align: center; border: 1px solid #ccc; border-radius: 4px;"
+                       oninput="ubahJumlahModal(${index}, this.value)">
+            </td>
+            <td>${formatRupiah(subtotal)}</td>
+            <td><button class="btn-hapus" onclick="hapusItem(${index})" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button></td>
+        </tr>
+    `;
+  });
+
+  document.getElementById("grandTotal").innerText = formatRupiah(grandTotal);
+}
+
+// Dan pastikan fungsi ubahJumlahModal menanganinya dengan aman seperti ini:
 function ubahJumlahModal(index, nilaiBaru) {
+  // Jika input dikosongkan sementara oleh kasir, jangan langsung di-reset atau di-block
+  if (nilaiBaru === "") return;
+
   const jml = parseInt(nilaiBaru);
-  if (jml > 0) {
+  
+  if (!isNaN(jml) && jml > 0) {
     keranjang[index].jumlah = jml;
     updateNotifikasiKeranjang();
-    renderTabelKeranjang();
-    filterObat();
+    
+    // Update subtotal teks secara langsung pada baris tersebut agar reaktif 
+    // atau render ulang tabel dengan aman
+    const subtotalCell = document.querySelectorAll("#tabelKeranjang tbody tr")[index]?.querySelectorAll("td")[2];
+    if (subtotalCell) {
+      subtotalCell.innerText = formatRupiah(keranjang[index].harga * jml);
+    }
+    
+    document.getElementById("grandTotal").innerText = formatRupiah(
+      keranjang.reduce((total, item) => total + (item.harga * item.jumlah), 0)
+    );
   }
 }
 

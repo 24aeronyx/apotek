@@ -28,10 +28,13 @@
 <body>
 
 <div class="header">
-    <h2>💊 Master Data Katalog Obat</h2>
-    <div style="display: flex; gap: 10px;">
-        <a href="index.html" style="text-decoration: none; background: #3498db; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">🛒 Kasir</a>
-        <a href="stok_bulk.html" style="text-decoration: none; background: #2ecc71; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">📦 Input Stok</a>
+    <h2><i class="fa-solid fa-boxes-stacked" style="color: #1abc9c;"></i> Master Data Katalog Obat</h2>
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <a href="index.html" style="text-decoration: none; background: #3498db; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-cash-register"></i> Kasir</a>
+        <a href="pembelian.html" style="text-decoration: none; background: #2ecc71; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-truck-ramp-box"></i> Input Stok</a>
+        <a href="master_obat.html" style="text-decoration: none; background: #f39c12; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-boxes-stacked"></i> Master Obat</a>
+        <a href="dashboard.html" style="text-decoration: none; background: #8e44ad; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+        <button onclick="localStorage.removeItem('user_apotek'); window.location.href='login.html';" style="background: #e74c3c; color: white; border: none; padding: 10px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-right-from-bracket"></i> Keluar</button>
     </div>
 </div>
 
@@ -54,7 +57,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr><td colspan="5" style="text-align: center; padding: 20px;">Memuat data master obat...</td></tr>
+                <tr><td colspan="6" style="text-align: center; padding: 20px;">Memuat data master obat...</td></tr>
             </tbody>
         </table>
     </div>
@@ -106,7 +109,7 @@
             renderTabelMaster(listMasterObat);
         } catch (error) {
             console.error("Gagal memuat master obat:", error);
-            document.querySelector('#tabelMaster tbody').innerHTML = '<tr><td colspan="5" style="text-align: center; color: red; padding: 20px;">Gagal terhubung ke server backend.</td></tr>';
+            document.querySelector('#tabelMaster tbody').innerHTML = '<tr><td colspan="6" style="text-align: center; color: red; padding: 20px;">Gagal terhubung ke server backend.</td></tr>';
         }
     }
 
@@ -217,6 +220,10 @@
         document.getElementById('modalMaster').style.display = 'flex';
     }
 
+    function tutupModal() {
+        document.getElementById('modalMaster').style.display = 'none';
+    }
+
     async function simpanMasterObat(event) {
         event.preventDefault();
         const id = document.getElementById('obatId').value;
@@ -268,6 +275,7 @@
 
     window.onload = muatMasterObat;
 </script>
+
 <!-- Modal Konfirmasi Hapus -->
 <div id="modalHapus" class="modal-overlay">
     <div class="modal-content" style="max-width: 400px; text-align: center;">
@@ -281,6 +289,7 @@
         </div>
     </div>
 </div>
+
 <!-- Modal Peringatan Error / Gagal -->
 <div id="modalAlert" class="modal-overlay">
     <div class="modal-content" style="max-width: 400px; text-align: center;">
@@ -290,5 +299,6 @@
         <button type="button" onclick="tutupModalAlert()" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">OK</button>
     </div>
 </div>
+
 </body>
 </html>

@@ -19,10 +19,13 @@
 <body>
 
 <div class="header">
-    <h2>📦 Input Faktur Pembelian Stok</h2>
-    <div style="display: flex; gap: 10px;">
-        <a href="master_obat.html" style="text-decoration: none; background: #f39c12; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">💊 Master Obat</a>
-        <a href="index.html" style="text-decoration: none; background: #3498db; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">🛒 Kasir</a>
+    <h2><i class="fa-solid fa-truck-ramp-box" style="color: #1abc9c;"></i> Input Faktur Pembelian Stok</h2>
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <a href="index.html" style="text-decoration: none; background: #3498db; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-cash-register"></i> Kasir</a>
+        <a href="pembelian.html" style="text-decoration: none; background: #2ecc71; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-truck-ramp-box"></i> Input Stok</a>
+        <a href="master_obat.html" style="text-decoration: none; background: #f39c12; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-boxes-stacked"></i> Master Obat</a>
+        <a href="dashboard.html" style="text-decoration: none; background: #8e44ad; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+        <button onclick="localStorage.removeItem('user_apotek'); window.location.href='login.html';" style="background: #e74c3c; color: white; border: none; padding: 10px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-right-from-bracket"></i> Keluar</button>
     </div>
 </div>
 

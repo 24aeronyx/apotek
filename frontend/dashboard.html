@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Panggil CDN Chart.js untuk grafik -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -16,9 +17,9 @@
         .stat-card h4 { margin: 0 0 10px 0; color: #7f8c8d; font-size: 14px; text-transform: uppercase; }
         .stat-card p { margin: 0; color: #2c3e50; font-size: 24px; font-weight: bold; }
         .card-section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1; margin-bottom: 20px; }
-        .btn-export-excel { background: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .btn-export-excel { background: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
         .btn-export-excel:hover { background: #219653; }
-        .btn-export-pdf { background: #c0392b; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .btn-export-pdf { background: #c0392b; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
         .btn-export-pdf:hover { background: #a93226; }
 
         /* Pengaturan khusus saat cetak ke PDF */
@@ -36,17 +37,17 @@
 <body>
 
 <div class="header">
-    <h2>📊 Dashboard & Laporan Keuangan (<span id="namaBulanAktif">Juli</span>)</h2>
-    <div style="display: flex; gap: 10px;">
-        <a href="index.html" style="text-decoration: none; background: #3498db; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">🛒 Ke Kasir</a>
-        <button onclick="bukaRiwayat()" style="background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 20px; cursor: pointer; font-weight: bold;">📜 Riwayat</button>
-        <a href="stok_bulk.html" style="text-decoration: none; background: #2ecc71; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">📦 Input Stok</a>
-        <a href="dashboard.html" style="text-decoration: none; background: #8e44ad; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">📊 Dashboard</a>
-        <button onclick="localStorage.removeItem('user_apotek'); window.location.href='login.html';" style="background: #e74c3c; color: white; border: none; padding: 10px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 14px;">🚪 Keluar</button>
+    <h2><i class="fa-solid fa-chart-pie" style="color: #1abc9c;"></i> Dashboard & Laporan (<span id="namaBulanAktif">Juli</span>)</h2>
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <a href="index.html" style="text-decoration: none; background: #3498db; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-cash-register"></i> Kasir</a>
+        <a href="pembelian.html" style="text-decoration: none; background: #2ecc71; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-truck-ramp-box"></i> Input Stok</a>
+        <a href="master_obat.html" style="text-decoration: none; background: #f39c12; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-boxes-stacked"></i> Master Obat</a>
+        <a href="dashboard.html" style="text-decoration: none; background: #8e44ad; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+        <button onclick="localStorage.removeItem('user_apotek'); window.location.href='login.html';" style="background: #e74c3c; color: white; border: none; padding: 10px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-right-from-bracket"></i> Keluar</button>
     </div>
 </div>
 
-<div class="container" style="max-width: 1100px;">
+<div class="container" style="max-width: 1100px; margin: auto; padding: 20px;">
     
     <!-- Kotak Ringkasan Statistik (KPI Cards Bulan Ini) -->
     <div class="stats-container">
@@ -77,8 +78,8 @@
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px; margin-bottom: 15px;">
             <h3 style="margin: 0; color: #2c3e50;">Riwayat Laporan Penjualan Bulan Ini</h3>
             <div style="display: flex; gap: 8px;">
-                <button type="button" class="btn-export-excel" onclick="exportKeExcel()">📥 Export ke Excel</button>
-                <button type="button" class="btn-export-pdf" onclick="exportKePDF()">📄 Export ke PDF</button>
+                <button type="button" class="btn-export-excel" onclick="exportKeExcel()"><i class="fa-solid fa-file-excel"></i> Export ke Excel</button>
+                <button type="button" class="btn-export-pdf" onclick="exportKePDF()"><i class="fa-solid fa-file-pdf"></i> Export ke PDF</button>
             </div>
         </div>
         
@@ -116,10 +117,10 @@
                 return;
             }
 
-            // Tentukan Bulan dan Tahun Aktif saat ini (Berdasarkan waktu sistem sistem/browser)
+            // Tentukan Bulan dan Tahun Aktif saat ini (Berdasarkan waktu browser)
             const sekarang = new Date();
             const tahunAktif = sekarang.getFullYear();
-            const bulanAktif = sekarang.getMonth() + 1; // 1 - 12 (Juli = 7)
+            const bulanAktif = sekarang.getMonth() + 1; // 1 - 12
 
             // Array nama bulan untuk judul header
             const namaBulanList = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -128,7 +129,6 @@
             // Filter data HANYA untuk bulan dan tahun yang aktif saat ini
             const dataBulanIni = data.filter(item => {
                 if (!item.waktu) return false;
-                // Format waktu diasumsikan "YYYY-MM-DD HH:MM:SS" atau sejenisnya
                 const parts = item.waktu.split(' ')[0].split('-');
                 if (parts.length === 3) {
                     const tahunData = parseInt(parts[0]);
@@ -156,14 +156,12 @@
                 totalItemTerjual += item.total_item;
                 totalOmzet += item.grand_total || 0;
 
-                // Ambil tanggal saja untuk grafik (tanpa jam)
                 let tanggalSaja = item.waktu.split(' ')[0];
                 if (!groupedDataPerHari[tanggalSaja]) {
                     groupedDataPerHari[tanggalSaja] = 0;
                 }
                 groupedDataPerHari[tanggalSaja] += (item.grand_total || 0);
 
-                // Tabel tetap menampilkan waktu lengkap seperti aslinya
                 tbody.innerHTML += `
                     <tr>
                         <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;"><strong>#${item.id_nota}</strong></td>
@@ -175,12 +173,10 @@
                 `;
             });
 
-            // Update kartu statistik bulan ini
             document.getElementById('statTotalTransaksi').innerText = totalTransaksi;
             document.getElementById('statTotalItem').innerText = totalItemTerjual;
             document.getElementById('statTotalOmzet').innerText = 'Rp ' + totalOmzet.toLocaleString('id-ID');
 
-            // Siapkan data untuk grafik (hanya tanggal, tanpa jam)
             let chartLabels = Object.keys(groupedDataPerHari);
             let chartDataOmzet = Object.values(groupedDataPerHari);
 
@@ -225,7 +221,6 @@
         });
     }
 
-    // Export ke Excel (Format .xls berbasis tabel HTML agar rapi)
     function exportKeExcel() {
         let tableHTML = document.getElementById('tabelLaporan').outerHTML;
         let blob = new Blob(['\ufeff' + tableHTML], { type: 'application/vnd.ms-excel' });
@@ -238,12 +233,10 @@
         document.body.removeChild(a);
     }
 
-    // Export ke PDF dengan Pratinjau (Preview) di Tab Baru
     function exportKePDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        // Judul Dokumen PDF
         doc.setFontSize(16);
         doc.setTextColor(44, 62, 80);
         doc.text("Laporan Riwayat Penjualan Bulan Ini", 14, 20);
@@ -252,7 +245,6 @@
         doc.setTextColor(127, 140, 141);
         doc.text("Dicetak pada: " + new Date().toLocaleString('id-ID'), 14, 28);
 
-        // Ambil data langsung dari tabel HTML
         const headers = [["ID Nota", "Kasir", "Waktu Transaksi", "Jumlah Item", "Grand Total"]];
         const data = [];
 
@@ -275,7 +267,6 @@
             return;
         }
 
-        // Buat Tabel di dalam PDF
         doc.autoTable({
             head: headers,
             body: data,
@@ -285,7 +276,6 @@
             styles: { fontSize: 9, cellPadding: 5 }
         });
 
-        // Buat URL pratinjau dan buka di tab baru browser
         const pdfBlobUrl = doc.output('bloburl');
         window.open(pdfBlobUrl, '_blank');
     }

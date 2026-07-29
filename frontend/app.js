@@ -7,8 +7,21 @@ let daftarObatMaster = [];
 
 async function muatDaftarObat() {
   try {
-    const response = await fetch("http://127.0.0.1:8000/obat/cari");
-    daftarObatMaster = await response.json();
+    // Diubah menyesuaikan endpoint get_all_medicines /obat yang baru
+    const response = await fetch("http://127.0.0.1:8000/obat");
+    const dataBackend = await response.json();
+    
+    // Mapping agar properti backend (harga_jual & total_stok) 
+    // tetap cocok dengan fungsi renderGrid frontend yang memakai (harga & stok)
+    daftarObatMaster = dataBackend.map(item => ({
+      id: item.id,
+      nama: item.nama,
+      kategori: item.kategori,
+      harga: item.harga_jual,
+      stok: item.total_stok,
+      gambar: item.gambar
+    }));
+
     renderGrid(daftarObatMaster);
   } catch (error) {
     console.error("Gagal terhubung ke API:", error);
@@ -25,7 +38,7 @@ function renderGrid(data) {
   data.sort((a, b) => {
     const habisA = a.stok === 0 ? 1 : 0;
     const habisB = b.stok === 0 ? 1 : 0;
-    return habisA - habisB; // Jika a habis (1) dan b ada stok (0), maka a dipindah ke belakang
+    return habisA - habisB;
   });
 
   data.forEach((obat) => {
@@ -37,7 +50,6 @@ function renderGrid(data) {
     const card = document.createElement("div");
     card.className = "card";
 
-    // Cek ketat: hanya tampilkan tag img jika obat.gambar valid
     let bagianGambar = "";
     if (obat.gambar && obat.gambar.trim() !== "" && obat.gambar !== "null" && obat.gambar !== "undefined") {
       bagianGambar = `
@@ -280,7 +292,6 @@ function tutupRiwayat() {
   document.getElementById("riwayatModal").style.display = "none";
 }
 
-// Fungsi opsional untuk cetak ulang berdasarkan data tersimpan/server
 async function cetakUlang(idNota) {
   try {
     const response = await fetch(
@@ -289,8 +300,6 @@ async function cetakUlang(idNota) {
     if (!response.ok) throw new Error("Gagal mengambil detail transaksi.");
 
     const data = await response.json();
-
-    // Panggil fungsi cetak dari struk.js yang sudah kita buat sebelumnya
     cetakNotaStruk(data.id_nota, data.keranjang, data.grand_total);
   } catch (error) {
     alert("Terjadi kesalahan saat mencetak ulang nota: " + error.message);

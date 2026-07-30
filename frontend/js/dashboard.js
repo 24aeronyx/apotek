@@ -1,13 +1,20 @@
-const API_URL = "http://127.0.0.1:8000"; // Sesuaikan URL backend Anda
+window.API_URL = window.API_URL || window.location.origin || "http://127.0.0.1:8000";
 let chartInstance = null;
 
-// Eksekusi kode saat HTML selesai dimuat
-document.addEventListener("DOMContentLoaded", () => {
+window.initDashboard = function() {
     const sekarang = new Date();
-    document.getElementById('filterBulan').value = sekarang.getMonth() + 1;
-    document.getElementById('filterTahun').value = sekarang.getFullYear();
+    const filterBulan = document.getElementById('filterBulan');
+    const filterTahun = document.getElementById('filterTahun');
+
+    if (filterBulan) {
+        filterBulan.value = sekarang.getMonth() + 1;
+    }
+    if (filterTahun) {
+        filterTahun.value = sekarang.getFullYear();
+    }
+
     muatDashboard();
-});
+};
 
 function tampilkanAlert(judul, pesan) {
     document.getElementById('alertTitle').innerText = judul;
@@ -21,7 +28,7 @@ function tutupModalAlert() {
 
 async function muatDashboard() {
     try {
-        const response = await fetch(`${API_URL}/laporan/harian`);
+        const response = await fetch(`${window.API_URL}/laporan/harian`);
         const data = await response.json();
 
         const tbody = document.querySelector('#tabelLaporan tbody');
@@ -94,7 +101,11 @@ async function muatDashboard() {
         document.getElementById('statTotalLaba').innerText = 'Rp ' + totalLabaBersih.toLocaleString('id-ID');
 
         let sortedDates = Object.keys(groupedDataPerHari).sort((a, b) => new Date(a) - new Date(b));
-        renderGrafikOmzet(sortedDates, sortedDates.map(date => groupedDataPerHari[date]));
+        if (typeof Chart !== 'undefined') {
+            renderGrafikOmzet(sortedDates, sortedDates.map(date => groupedDataPerHari[date]));
+        } else {
+            console.warn('Chart.js belum tersedia, grafik tidak ditampilkan.');
+        }
 
     } catch (error) {
         console.error("Gagal memuat dashboard:", error);
@@ -103,6 +114,9 @@ async function muatDashboard() {
 }
 
 function renderGrafikOmzet(labels, dataOmzet) {
+    if (typeof Chart === 'undefined') {
+        return;
+    }
     const ctx = document.getElementById('chartOmzet').getContext('2d');
     if (chartInstance) chartInstance.destroy();
 

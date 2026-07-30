@@ -7,6 +7,7 @@
     <!-- CSS Utama & FontAwesome -->
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Layout Sidebar & Main Content */
         body {
@@ -180,28 +181,97 @@
             const html = await response.text();
             
             // Masukkan isi HTML ke area konten
-            document.getElementById('contentArea').innerHTML = html;
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = html;
+            Array.from(document.querySelectorAll('script')).forEach(script => {
+                if (script.src && script.src.includes('/static/js/')) {
+                    script.remove();
+                }
+            });
+            Array.from(contentArea.querySelectorAll('script')).forEach(script => script.remove());
 
             // Update status aktif pada menu sidebar
             document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
             if (element) element.classList.add('active');
 
             // Eksekusi ulang script yang ada di dalam file yang dimuat (jika ada)
-            evaluatScriptDinamis();
+            await evaluatScriptDinamis(url);
         } catch (error) {
             console.error(error);
             document.getElementById('contentArea').innerHTML = `<div style="text-align:center; padding: 40px; color: #e74c3c;"><h3>Gagal Memuat Halaman</h3><p>${error.message}</p></div>`;
         }
     }
 
-    // Jalankan skrip JS spesifik halaman setelah di-load
-    function evaluatScriptDinamis() {
-        // Cek halaman apa yang aktif lalu jalankan inisialisasi skripnya masing-masing
-        if (typeof muatDropdownObat === 'function') muatDropdownObat();
-        if (typeof muatMasterObat === 'function') muatMasterObat();
-        if (typeof loadBatches === 'function') loadBatches();
-        if (typeof muatDashboard === 'function') muatDashboard();
-        if (typeof loadProduk === 'function') loadProduk(); // Pastikan fungsi kasir utama terpanggil
+    async function loadScript(src) {
+        if (!window.__loadedScripts) {
+            window.__loadedScripts = new Set();
+        }
+
+        if (window.__loadedScripts.has(src)) {
+            return;
+        }
+
+        window.__loadedScripts.add(src);
+
+        try {
+            const existing = document.querySelector(`script[src="${src}"]`);
+            if (existing) {
+                existing.remove();
+            }
+
+            const response = await fetch(src);
+            const code = await response.text();
+            const newScript = document.createElement('script');
+            newScript.textContent = code;
+            document.body.appendChild(newScript);
+        } catch (error) {
+            console.error(`Gagal memuat script ${src}:`, error);
+        }
+    }
+
+    async function evaluatScriptDinamis(url) {
+        const scriptsToLoad = [];
+
+        if (url.includes('/pages/master_obat.html')) {
+            scriptsToLoad.push('/static/js/master_obat.js');
+        } else if (url.includes('/pages/pembelian.html')) {
+            scriptsToLoad.push('/static/js/pembelian.js');
+        } else if (url.includes('/pages/stok_opname.html')) {
+            scriptsToLoad.push('/static/js/stok_opname.js');
+        } else if (url.includes('/pages/dashboard.html')) {
+            scriptsToLoad.push('/static/js/dashboard.js');
+        } else if (url.includes('/pages/kasir.html')) {
+            scriptsToLoad.push('/static/js/struk.js');
+            scriptsToLoad.push('/static/app.js');
+        }
+
+        for (const src of scriptsToLoad) {
+            await loadScript(src);
+        }
+
+        if (url.includes('/pages/master_obat.html')) {
+            if (typeof window.muatMasterObat === 'function') {
+                window.muatMasterObat();
+            }
+        } else if (url.includes('/pages/pembelian.html')) {
+            if (typeof window.muatDropdownObat === 'function') {
+                window.muatDropdownObat();
+            }
+        } else if (url.includes('/pages/stok_opname.html')) {
+            if (typeof window.loadBatches === 'function') {
+                window.loadBatches();
+            }
+        } else if (url.includes('/pages/dashboard.html')) {
+            if (typeof window.initDashboard === 'function') {
+                window.initDashboard();
+            } else if (typeof window.muatDashboard === 'function') {
+                window.muatDashboard();
+            }
+        } else if (url.includes('/pages/kasir.html')) {
+            if (typeof window.initKasir === 'function') {
+                window.initKasir();
+            }
+        }
     }
 
     // Muat halaman kasir secara default saat index dibuka
@@ -209,7 +279,7 @@
         // Cek apakah user sudah login
         const user = localStorage.getItem('user_apotek');
         if (!user) {
-            window.location.href = 'pages/login.html';
+            window.location.href = '/pages/login.html';
             return;
         }
         document.getElementById('userInfo').innerHTML = `<i class="fa-solid fa-user-circle"></i> ${user}`;

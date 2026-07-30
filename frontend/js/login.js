@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:8000"; // Sesuaikan URL backend Anda
+window.API_URL = window.API_URL || window.location.origin || "http://127.0.0.1:8000";
 
 async function prosesLogin(event) {
     event.preventDefault();
@@ -13,7 +13,7 @@ async function prosesLogin(event) {
     pesanDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memverifikasi akun...';
 
     try {
-        const response = await fetch(`${API_URL}/login`, {
+        const response = await fetch(`${window.API_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: username, password: password })

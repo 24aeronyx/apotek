@@ -1,8 +1,4 @@
-const API_URL = "http://127.0.0.1:8000"; // Sesuaikan URL backend Anda
-
-document.addEventListener("DOMContentLoaded", () => {
-    muatDropdownObat();
-});
+window.API_URL = window.API_URL || window.location.origin || "http://127.0.0.1:8000";
 
 function tampilkanAlert(judul, pesan, tipe = "sukses") {
     document.getElementById('alertTitle').innerText = judul;
@@ -26,10 +22,14 @@ function tutupModalAlert() {
 
 // 1. Muat daftar obat ke dropdown saat halaman dibuka
 async function muatDropdownObat() {
+    const select = document.getElementById('selectObat');
+    if (!select) {
+        return;
+    }
+
     try {
-        const response = await fetch(`${API_URL}/obat`);
+        const response = await fetch(`${window.API_URL}/obat`);
         const data = await response.json();
-        const select = document.getElementById('selectObat');
         
         select.innerHTML = '<option value="">-- Pilih Obat --</option>';
         data.forEach(obat => {
@@ -54,7 +54,7 @@ async function simpanPembelian(event) {
     };
 
     try {
-        const response = await fetch(`${API_URL}/pembelian`, {
+        const response = await fetch(`${window.API_URL}/pembelian`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)

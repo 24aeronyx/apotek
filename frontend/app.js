@@ -1,3 +1,5 @@
+window.API_URL = window.API_URL || window.location.origin || "http://127.0.0.1:8000";
+
 if (!localStorage.getItem("user_apotek")) {
   window.location.href = "login.html";
 }
@@ -8,7 +10,7 @@ let daftarObatMaster = [];
 async function muatDaftarObat() {
   try {
     // Diubah menyesuaikan endpoint get_all_medicines /obat yang baru
-    const response = await fetch("http://127.0.0.1:8000/obat");
+    const response = await fetch(`${window.API_URL}/obat`);
     const dataBackend = await response.json();
     
     // Mapping agar properti backend (harga_jual & total_stok) 
@@ -300,7 +302,7 @@ async function prosesTransaksi() {
   pesanDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses transaksi...';
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/transaksi", {
+    const response = await fetch(`${window.API_URL}/transaksi`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -365,7 +367,7 @@ async function bukaRiwayat() {
   tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat data...</td></tr>';
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/laporan/harian");
+    const response = await fetch(`${window.API_URL}/laporan/harian`);
     const data = await response.json();
 
     tbody.innerHTML = "";
@@ -402,7 +404,7 @@ function tutupRiwayat() {
 async function cetakUlang(idNota) {
   try {
     const response = await fetch(
-      `http://127.0.0.1:8000/laporan/detail/${idNota}`,
+      `${window.API_URL}/laporan/detail/${idNota}`,
     );
     if (!response.ok) throw new Error("Gagal mengambil detail transaksi.");
 
@@ -417,4 +419,10 @@ function formatRupiah(angka) {
   return "Rp " + angka.toLocaleString("id-ID");
 }
 
-window.onload = muatDaftarObat;
+function initKasir() {
+  if (document.getElementById("productGrid")) {
+    muatDaftarObat();
+  }
+}
+
+window.addEventListener('load', initKasir);

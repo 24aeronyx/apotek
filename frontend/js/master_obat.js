@@ -1,23 +1,28 @@
-const API_URL = "http://127.0.0.1:8000"; // Sesuaikan URL backend Anda
+window.API_URL = window.API_URL || window.location.origin || "http://127.0.0.1:8000";
 let listMasterObat = [];
 
-document.addEventListener("DOMContentLoaded", () => {
-    muatMasterObat();
-});
-
 async function muatMasterObat() {
+    const tabel = document.querySelector('#tabelMaster tbody');
+    if (!tabel) {
+        return;
+    }
+
     try {
-        const response = await fetch(`${API_URL}/obat`);
+        const response = await fetch(`${window.API_URL}/obat`);
         listMasterObat = await response.json();
         renderTabelMaster(listMasterObat);
     } catch (error) {
         console.error("Gagal memuat master obat:", error);
-        document.querySelector('#tabelMaster tbody').innerHTML = '<tr><td colspan="6" style="text-align: center; color: red; padding: 20px;">Gagal terhubung ke server backend.</td></tr>';
+        tabel.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red; padding: 20px;">Gagal terhubung ke server backend.</td></tr>';
     }
 }
 
 function renderTabelMaster(data) {
     const tbody = document.querySelector('#tabelMaster tbody');
+    if (!tbody) {
+        return;
+    }
+
     tbody.innerHTML = '';
 
     if (!Array.isArray(data) || data.length === 0) {
@@ -104,7 +109,7 @@ async function eksekusiHapus() {
     tutupModalHapus();
 
     try {
-        const response = await fetch(`${API_URL}/obat/${id}`, { method: 'DELETE' });
+        const response = await fetch(`${window.API_URL}/obat/${id}`, { method: 'DELETE' });
         const result = await response.json();
         if (response.ok) {
             muatMasterObat();
@@ -162,7 +167,7 @@ async function simpanMasterObat(event) {
     if (fileInput.files.length > 0) {
         const formData = new FormData();
         formData.append("file", fileInput.files[0]);
-        const uploadRes = await fetch(`${API_URL}/upload-gambar`, { method: 'POST', body: formData });
+        const uploadRes = await fetch(`${window.API_URL}/upload-gambar`, { method: 'POST', body: formData });
         const uploadResJson = await uploadRes.json();
         if (uploadRes.ok) {
             urlGambarFinal = uploadResJson.url_gambar;
@@ -176,11 +181,11 @@ async function simpanMasterObat(event) {
         ...(urlGambarFinal && { gambar: urlGambarFinal })
     };
 
-    let endpoint = `${API_URL}/obat`;
+    let endpoint = `${window.API_URL}/obat`;
     let method = 'POST';
 
     if (id) {
-        endpoint = `${API_URL}/obat/${id}`;
+        endpoint = `${window.API_URL}/obat/${id}`;
         method = 'PUT';
     }
 

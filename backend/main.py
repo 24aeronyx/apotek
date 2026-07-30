@@ -23,6 +23,8 @@ app.mount("/static", StaticFiles(directory="frontend"), name="frontend_static")
 # Mount folder pages agar bisa diakses langsung oleh fetch dinamis
 app.mount("/pages", StaticFiles(directory="frontend/pages"), name="pages_static")
 
+app.mount("/static/js", StaticFiles(directory="frontend/js"), name="js_static")
+
 # Fix path gambar lama jika diperlukan
 app.mount("/static/images", StaticFiles(directory="backend/static/images"), name="old_images_fix")
 

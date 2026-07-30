@@ -1,16 +1,14 @@
-const API_URL = "http://127.0.0.1:8000"; // Sesuaikan URL backend Anda
-
-document.addEventListener("DOMContentLoaded", () => {
-    loadBatches();
-
-    // Listener Submit Form Opname
-    document.getElementById("formOpname").addEventListener("submit", handleOpnameSubmit);
-});
+window.API_URL = window.API_URL || window.location.origin || "http://127.0.0.1:8000";
 
 // 1. Fetch data langsung dari endpoint /obat
 async function loadBatches() {
+    const tbody = document.getElementById("batchTableBody");
+    if (!tbody) {
+        return;
+    }
+
     try {
-        const response = await fetch(`${API_URL}/obat`); 
+        const response = await fetch(`${window.API_URL}/obat`); 
         const medicines = await response.json();
         
         let allBatches = [];
@@ -99,7 +97,7 @@ async function handleOpnameSubmit(e) {
     };
 
     try {
-        const response = await fetch(`${API_URL}/stok/opname`, {
+        const response = await fetch(`${window.API_URL}/stok/opname`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)

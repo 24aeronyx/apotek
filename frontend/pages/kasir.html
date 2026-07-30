@@ -1,5 +1,18 @@
 <!-- Konten Kasir Utama -->
 <div class="container" style="max-width: 100%; padding: 0;">
+    
+    <!-- Baris Kontrol Atas (Pencarian & Tombol Riwayat) -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1;">
+        <div style="display: flex; align-items: center; gap: 10px; width: 100%; max-width: 400px;">
+            <i class="fa-solid fa-magnifying-glass" style="color: #7f8c8d;"></i>
+            <input type="text" class="form-control search-box" id="searchInput" placeholder="Cari nama obat cepat..." onkeyup="filterObat()" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; outline: none;">
+        </div>
+        <button onclick="bukaRiwayat()" style="background: #3498db; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Transaksi
+        </button>
+    </div>
+
+    <!-- Grid Produk Kasir -->
     <div class="product-grid" id="productGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;"></div>
 </div>
 
@@ -89,6 +102,6 @@
     </div>
 </div>
 
-<!-- Sertakan skrip kasir dan struk agar terpanggil saat halaman dimuat -->
+<!-- Sertakan skrip kasir dan struk -->
 <script src="/static/js/struk.js"></script>
 <script src="/static/app.js"></script>

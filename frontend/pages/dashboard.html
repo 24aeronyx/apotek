@@ -1,61 +1,7 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard & Laporan - Apotek</title>
-    <!-- CDN jsPDF dan AutoTable -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Panggil CDN Chart.js untuk grafik -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1; text-align: center; }
-        .stat-card h4 { margin: 0 0 10px 0; color: #7f8c8d; font-size: 13px; text-transform: uppercase; }
-        .stat-card p { margin: 0; color: #2c3e50; font-size: 22px; font-weight: bold; }
-        .card-section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1; margin-bottom: 20px; }
-        .btn-export-excel { background: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
-        .btn-export-excel:hover { background: #219653; }
-        .btn-export-pdf { background: #c0392b; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
-        .btn-export-pdf:hover { background: #a93226; }
-        .filter-container { display: flex; gap: 15px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; background: #f8f9fa; padding: 15px; border-radius: 8px; }
-
-        /* Modal Kustom Bersih Tanpa Alert Bawaan Browser */
-        .modal-overlay { display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
-        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; }
-
-        /* Pengaturan khusus saat cetak ke PDF */
-       @media print {
-            body { background: white; }
-            .header, div[style*="display: flex; gap: 10px;"], .btn-export-excel, .btn-export-pdf, .stats-container, .filter-container, .card-section:has(#chartOmzet) {
-                display: none !important;
-            }
-            .card-section { border: none; box-shadow: none; padding: 0; margin: 0; }
-            table { width: 100% !important; }
-            th, td { border-bottom: 1px solid #ddd !important; color: black !important; }
-        }
-    </style>
-</head>
-<body>
-
-<div class="header">
-    <h2><i class="fa-solid fa-chart-pie" style="color: #1abc9c;"></i> Dashboard & Laporan Keuangan</h2>
-    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-        <a href="index.html" style="text-decoration: none; background: #3498db; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-cash-register"></i> Kasir</a>
-        <a href="pembelian.html" style="text-decoration: none; background: #2ecc71; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-truck-ramp-box"></i> Input Stok</a>
-        <a href="master_obat.html" style="text-decoration: none; background: #f39c12; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-boxes-stacked"></i> Master Obat</a>
-        <a href="dashboard.html" style="text-decoration: none; background: #8e44ad; color: white; padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
-        <button onclick="localStorage.removeItem('user_apotek'); window.location.href='login.html';" style="background: #e74c3c; color: white; border: none; padding: 10px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-right-from-bracket"></i> Keluar</button>
-    </div>
-</div>
-
-<div class="container" style="max-width: 1100px; margin: auto; padding: 20px;">
+<div class="container" style="max-width: 1100px; margin: auto; padding: 0;">
     
     <!-- Filter Bulan & Tahun -->
-    <div class="filter-container">
+    <div class="filter-container" style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ecf0f1;">
         <div>
             <label style="font-weight: bold; color: #2c3e50; margin-right: 8px;">Pilih Bulan:</label>
             <select id="filterBulan" class="form-control" style="padding: 8px; border-radius: 6px; border: 1px solid #ccc;" onchange="muatDashboard()">
@@ -84,65 +30,67 @@
     </div>
 
     <!-- Kotak Ringkasan Statistik (KPI Cards) -->
-    <div class="stats-container">
-        <div class="stat-card" style="border-left: 4px solid #3498db;">
-            <h4>Total Transaksi</h4>
-            <p id="statTotalTransaksi" style="color: #3498db;">0</p>
+    <div class="stats-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+        <div class="stat-card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1; text-align: center; border-left: 4px solid #3498db;">
+            <h4 style="margin: 0 0 10px 0; color: #7f8c8d; font-size: 13px; text-transform: uppercase;">Total Transaksi</h4>
+            <p id="statTotalTransaksi" style="margin: 0; color: #3498db; font-size: 22px; font-weight: bold;">0</p>
         </div>
-        <div class="stat-card" style="border-left: 4px solid #e67e22;">
-            <h4>Item Terjual</h4>
-            <p id="statTotalItem" style="color: #e67e22;">0</p>
+        <div class="stat-card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1; text-align: center; border-left: 4px solid #e67e22;">
+            <h4 style="margin: 0 0 10px 0; color: #7f8c8d; font-size: 13px; text-transform: uppercase;">Item Terjual</h4>
+            <p id="statTotalItem" style="margin: 0; color: #e67e22; font-size: 22px; font-weight: bold;">0</p>
         </div>
-        <div class="stat-card" style="border-left: 4px solid #27ae60;" >
-            <h4>Total Omzet (Pendapatan)</h4>
-            <p id="statTotalOmzet" style="color: #27ae60;">Rp 0</p>
+        <div class="stat-card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1; text-align: center; border-left: 4px solid #27ae60;">
+            <h4 style="margin: 0 0 10px 0; color: #7f8c8d; font-size: 13px; text-transform: uppercase;">Total Omzet (Pendapatan)</h4>
+            <p id="statTotalOmzet" style="margin: 0; color: #27ae60; font-size: 22px; font-weight: bold;">Rp 0</p>
         </div>
-        <div class="stat-card" style="border-left: 4px solid #8e44ad;">
-            <h4>Estimasi Laba Bersih</h4>
-            <p id="statTotalLaba" style="color: #8e44ad;">Rp 0</p>
+        <div class="stat-card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1; text-align: center; border-left: 4px solid #8e44ad;">
+            <h4 style="margin: 0 0 10px 0; color: #7f8c8d; font-size: 13px; text-transform: uppercase;">Estimasi Laba Bersih</h4>
+            <p id="statTotalLaba" style="margin: 0; color: #8e44ad; font-size: 22px; font-weight: bold;">Rp 0</p>
         </div>
     </div>
 
     <!-- Bagian Grafik / Chart Transaksi Per Hari -->
-    <div class="card-section">
-        <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px;">Grafik Tren Pendapatan Harian</h3>
+    <div class="card-section" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1; margin-bottom: 20px;">
+        <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px; font-size: 18px;">Grafik Tren Pendapatan Harian</h3>
         <div style="position: relative; height: 300px; width: 100%;">
             <canvas id="chartOmzet"></canvas>
         </div>
     </div>
 
     <!-- Tabel Detail Laporan Bulanan + Tombol Export -->
-    <div class="card-section">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px; margin-bottom: 15px;">
-            <h3 style="margin: 0; color: #2c3e50;">Riwayat Laporan Penjualan</h3>
+    <div class="card-section" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <h3 style="margin: 0; color: #2c3e50; font-size: 18px;">Riwayat Laporan Penjualan</h3>
             <div style="display: flex; gap: 8px;">
-                <button type="button" class="btn-export-excel" onclick="exportKeExcel()"><i class="fa-solid fa-file-excel"></i> Export ke Excel</button>
-                <button type="button" class="btn-export-pdf" onclick="exportKePDF()"><i class="fa-solid fa-file-pdf"></i> Export ke PDF</button>
+                <button type="button" class="btn-export-excel" onclick="exportKeExcel()" style="background: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;"><i class="fa-solid fa-file-excel"></i> Export ke Excel</button>
+                <button type="button" class="btn-export-pdf" onclick="exportKePDF()" style="background: #c0392b; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;"><i class="fa-solid fa-file-pdf"></i> Export ke PDF</button>
             </div>
         </div>
         
-        <table id="tabelLaporan" style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr>
-                    <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; text-align: left;">ID Nota</th>
-                    <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; text-align: left;">Kasir</th>
-                    <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; text-align: left;">Waktu Transaksi</th>
-                    <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; text-align: left;">Jumlah Item</th>
-                    <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; text-align: right;">Grand Total</th>
-                    <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; text-align: right;">Perkiraan Laba</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr><td colspan="6" style="text-align: center; padding: 20px;">Memuat data laporan...</td></tr>
-            </tbody>
-        </table>
+        <div style="overflow-x: auto;">
+            <table id="tabelLaporan" style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr>
+                        <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50;">ID Nota</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50;">Kasir</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50;">Waktu Transaksi</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50;">Jumlah Item</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50; text-align: right;">Grand Total</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50; text-align: right;">Perkiraan Laba</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="6" style="text-align: center; padding: 20px;">Memuat data laporan...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
 </div>
 
 <!-- Modal Kustom untuk Peringatan / Pesan -->
-<div id="modalAlert" class="modal-overlay">
-    <div class="modal-content">
+<div id="modalAlert" class="modal-overlay" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+    <div class="modal-content" style="background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center;">
         <div style="font-size: 45px; color: #e67e22; margin-bottom: 10px;"><i class="fa-solid fa-circle-exclamation"></i></div>
         <h3 style="margin-top: 0; color: #2c3e50;" id="alertTitle">Peringatan</h3>
         <p style="color: #555; font-size: 14px; margin-bottom: 20px;" id="alertMessage">Pesan informasi.</p>
@@ -150,8 +98,5 @@
     </div>
 </div>
 
-<!-- Memanggil JavaScript dari file eksternal -->
+<!-- Memanggil JavaScript Dashboard -->
 <script src="/static/js/dashboard.js"></script>
-
-</body>
-</html>

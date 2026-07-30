@@ -31,9 +31,9 @@ function renderTabelMaster(data) {
     }
 
     data.forEach(obat => {
-        let tampilanGambar = `<div class="img-thumb"><i class="fa-solid fa-prescription-bottle-medical" style="color: #94a3b8;"></i></div>`;
-        if (obat.gambar && obat.gambar.trim() !== "" && obat.gambar !== "null") {
-            tampilanGambar = `<img src="${obat.gambar}" class="img-thumb" alt="${obat.nama}">`;
+        let tampilanGambar = `<div class="img-thumb" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 6px;"><i class="fa-solid fa-pills" style="color: #94a3b8; font-size: 20px;"></i></div>`;
+        if (obat.gambar && obat.gambar.trim() !== "" && obat.gambar !== "null" && obat.gambar !== "undefined") {
+            tampilanGambar = `<img src="${obat.gambar}" class="img-thumb" alt="${obat.nama}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px;">`;
         }
 
         let stokBadge = `<span style="font-weight: bold; color: ${obat.total_stok > 0 ? '#27ae60' : '#e74c3c'};">${obat.total_stok || 0}</span>`;

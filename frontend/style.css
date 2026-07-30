@@ -79,3 +79,12 @@ th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ecf0f1; }
     -webkit-appearance: none; 
     margin: 0; 
 }
+
+/* Batasi ukuran gambar thumbnail di tabel master agar rapi */
+.table-master img, 
+.img-thumb {
+    width: 50px !important;
+    height: 50px !important;
+    object-fit: cover !important;
+    border-radius: 6px;
+}

@@ -54,20 +54,20 @@ function renderGrid(data) {
 
     let bagianGambar = "";
     if (obat.gambar && obat.gambar.trim() !== "" && obat.gambar !== "null" && obat.gambar !== "undefined") {
-      bagianGambar = `
-        <div class="product-img-container">
-            <img src="${obat.gambar}" alt="${obat.nama}" 
-                 onerror="this.parentElement.innerHTML='<div class=&quot;fallback-icon&quot;><i class=&quot;fa-solid fa-prescription-bottle-medical&quot;></i></div>'">
-        </div>
-      `;
-    } else {
-      bagianGambar = `
-        <div class="product-img-container">
-            <div class="fallback-icon">
-                <i class="fa-solid fa-prescription-bottle-medical"></i>
+        bagianGambar = `
+            <div class="product-img-container" style="width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 8px 8px 0 0;">
+                <img src="${obat.gambar}" alt="${obat.nama}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px 8px 0 0;"
+                    onerror="this.parentElement.innerHTML='<div style=&quot;width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 8px 8px 0 0;&quot;><i class=&quot;fa-solid fa-pills&quot; style=&quot;color: #94a3b8; font-size: 32px;&quot;></i></div>'">
             </div>
-        </div>
-      `;
+        `;
+    } else {
+        bagianGambar = `
+            <div class="product-img-container" style="width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 8px 8px 0 0;">
+                <div class="fallback-icon">
+                    <i class="fa-solid fa-pills" style="color: #94a3b8; font-size: 32px;"></i>
+                </div>
+            </div>
+        `;
     }
 
     card.innerHTML = `

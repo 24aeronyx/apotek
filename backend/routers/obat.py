@@ -125,3 +125,4 @@ def delete_medicine(obat_id: int):
         raise HTTPException(status_code=400, detail="Gagal menghapus obat (kemungkinan masih terikat dengan data batch/transaksi).")
     finally:
         db.close()
+        

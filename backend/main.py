@@ -4,7 +4,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routers import laporan, obat, transaksi, user, pembelian
+from backend.routers import laporan, obat, transaksi, user, pembelian, stok
 from backend.database import engine, SessionLocal
 from backend.models import Base
 
@@ -43,6 +43,10 @@ def halaman_pembelian():
 def halaman_login():
     return FileResponse("frontend/login.html")
 
+@app.get("/stok_opname.html")
+def halaman_stok_opname():
+    return FileResponse("frontend/stok_opname.html")
+
 @app.get("/index.html")
 def halaman_index():
     return FileResponse("frontend/index.html")
@@ -60,6 +64,7 @@ app.include_router(laporan.router)
 app.include_router(transaksi.router)
 app.include_router(user.router)
 app.include_router(pembelian.router)
+app.include_router(stok.router)
 
 @app.post("/upload-gambar")
 def upload_gambar(file: UploadFile = File(...)):

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stok Opname & Pemusnahan - POS Apotek</title>
+    <!-- CSS Bootstrap 5 & FontAwesome Icon -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card-custom { border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .btn-rounded { border-radius: 20px; font-weight: 600; }
+        .text-selisih-minus { color: #dc3545; font-weight: bold; }
+        .text-selisih-plus { color: #198754; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <div class="container my-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold text-success"><i class="fa-solid fa-boxes-packing me-2"></i>Stok Opname & Pemusnahan</h3>
+            <div>
+                <a href="index.html" class="btn btn-outline-secondary btn-rounded me-2"><i class="fa-solid fa-cash-register me-1"></i> Kasir</a>
+                <a href="master_obat.html" class="btn btn-warning text-white btn-rounded me-2"><i class="fa-solid fa-pills me-1"></i> Master Obat</a>
+                <a href="dashboard.html" class="btn btn-purple btn-rounded me-2" style="background-color: #8e44ad; color: white;"><i class="fa-solid fa-chart-pie me-1"></i> Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Main Card -->
+        <div class="card card-custom p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold">Daftar Batch Obat untuk Opname</h5>
+                <input type="text" id="searchInput" class="form-control w-25" placeholder="Cari obat / no batch...">
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="tableOpname">
+                    <thead class="table-light">
+                        <tr>
+                            <th>No Batch</th>
+                            <th>Nama Obat</th>
+                            <th>Harga Beli</th>
+                            <th>ED (Kedaluwarsa)</th>
+                            <th>Stok Sistem</th>
+                            <th>Aksi Opname</th>
+                        </tr>
+                    </thead>
+                    <tbody id="batchTableBody">
+                        <!-- Data Batch obat akan di-render di sini lewat JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Form Stok Opname -->
+    <div class="modal fade" id="modalOpname" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content style-modal" style="border-radius: 15px;">
+                <div class="modal-header bg-success text-white" style="border-top-left-radius: 15px; border-top-right-radius: 15px;">
+                    <h5 class="modal-title fw-bold" id="modalTitle"><i class="fa-solid fa-clipboard-check me-2"></i>Form Penyesuaian Stok</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formOpname">
+                        <input type="hidden" id="opnameBatchId">
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-muted fw-bold">Nama Obat / Batch</label>
+                            <input type="text" id="opnameNamaObat" class="form-control bg-light" readonly>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label text-muted fw-bold">Stok di Sistem</label>
+                                <input type="number" id="opnameStokLama" class="form-control bg-light" readonly>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label text-success fw-bold">Stok Fisik Real</label>
+                                <input type="number" id="opnameStokBaru" class="form-control" required min="0">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted fw-bold">Keterangan / Alasan</label>
+                            <select id="opnameKeterangan" class="form-select" required>
+                                <option value="Stok Opname Rutin">Stok Opname Rutin</option>
+                                <option value="Pemusnahan Barang Kedaluwarsa (ED)">Pemusnahan Barang Kedaluwarsa (ED)</option>
+                                <option value="Barang Rusak / Pecah">Barang Rusak / Pecah</option>
+                                <option value="Selisih Hitungan Kasir">Selisih Hitungan Kasir</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Catatan Tambahan (Opsional)</label>
+                            <textarea id="opnameCatatan" class="form-control" rows="2" placeholder="Contoh: Ditemukan botol pecah di rak A3"></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-success fw-bold"><i class="fa-solid fa-floppy-disk me-1"></i> Simpan Penyesuaian</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="static/js/stok_opname.js"></script>
+</body>
+</html>

@@ -68,4 +68,17 @@ class SaleItem(Base):
     sale_id = Column(Integer, ForeignKey("sales.id"))
     medicine_id = Column(Integer, ForeignKey("medicines.id"))
     jumlah = Column(Integer)
-    
+
+class KartuStok(Base):
+    __tablename__ = "kartu_stok"
+
+    id = Column(Integer, primary_key=True, index=True)
+    obat_id = Column(Integer, ForeignKey("medicines.id"))  # Diubah dari "obat.id" ke "medicines.id"
+    tanggal = Column(DateTime, default=datetime.utcnow)
+    jenis_transaksi = Column(String(256))  # Contoh: "PENJUALAN", "PEMBELIAN", "OPNAME", "PEMUSNAHAN"
+    jumlah = Column(Integer)          # Nilai positif (masuk) atau negatif (keluar)
+    stok_sisa = Column(Integer)       # Sisa stok setelah transaksi
+    keterangan = Column(String(256), nullable=True)
+
+    # Anda juga bisa menambahkan relasi SQLAlchemy agar gampang dipanggil
+    medicine = relationship("Medicine")

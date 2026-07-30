@@ -1,74 +1,170 @@
 window.API_URL = window.API_URL || window.location.origin || "http://127.0.0.1:8000";
+let keranjangBeli = [];
+let masterObatList = [];
 
-function tampilkanAlert(judul, pesan, tipe = "sukses") {
-    document.getElementById('alertTitle').innerText = judul;
-    document.getElementById('alertMessage').innerText = pesan;
-    
-    const iconDiv = document.getElementById('alertIcon');
-    if (tipe === "sukses") {
-        iconDiv.style.color = "#2ecc71";
-        iconDiv.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
-    } else {
-        iconDiv.style.color = "#e67e22";
-        iconDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+window.muatDropdownObat = async function() {
+    try {
+        const resSup = await fetch(`${window.API_URL}/suppliers`);
+        const suppliers = await resSup.json();
+        const selectSup = document.getElementById('selectSupplier');
+        if (selectSup) {
+            selectSup.innerHTML = '';
+            suppliers.forEach(s => {
+                selectSup.innerHTML += `<option value="${s.id}">${s.nama_supplier}</option>`;
+            });
+        }
+
+        const resObat = await fetch(`${window.API_URL}/obat`);
+        masterObatList = await resObat.json();
+    } catch (e) {
+        console.error("Gagal memuat data pembelian:", e);
     }
+};
 
-    document.getElementById('modalAlert').style.display = 'flex';
-}
-
-function tutupModalAlert() {
-    document.getElementById('modalAlert').style.display = 'none';
-}
-
-// 1. Muat daftar obat ke dropdown saat halaman dibuka
-async function muatDropdownObat() {
-    const select = document.getElementById('selectObat');
-    if (!select) {
+// Fungsi filter pencarian obat secara instan
+window.filterDropdownObat = function() {
+    const keyword = document.getElementById('inputCariObatBeli').value.toLowerCase();
+    const dropdown = document.getElementById('dropdownHasilObat');
+    
+    if (!keyword.trim()) {
+        dropdown.style.display = 'none';
         return;
     }
 
-    try {
-        const response = await fetch(`${window.API_URL}/obat`);
-        const data = await response.json();
-        
-        select.innerHTML = '<option value="">-- Pilih Obat --</option>';
-        data.forEach(obat => {
-            select.innerHTML += `<option value="${obat.id}">${obat.nama} (Kategori: ${obat.kategori})</option>`;
-        });
-    } catch (error) {
-        console.error("Gagal memuat master obat:", error);
-        tampilkanAlert("Kesalahan Koneksi", "Gagal terhubung ke server untuk memuat master obat.", "error");
+    const filtered = masterObatList.filter(m => m.nama.toLowerCase().includes(keyword) || m.kategori.toLowerCase().includes(keyword));
+    
+    if (filtered.length === 0) {
+        dropdown.innerHTML = '<div style="padding: 10px; color: #7f8c8d; font-size: 13px;">Obat tidak ditemukan</div>';
+        dropdown.style.display = 'block';
+        return;
     }
+
+    dropdown.innerHTML = '';
+    filtered.forEach(m => {
+        dropdown.innerHTML += `
+            <div onclick="pilihObatFaktur(${m.id}, '${m.nama.replace(/'/g, "\\'")}')" style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 14px;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='white'">
+                <strong>${m.nama}</strong> <span style="font-size: 12px; color: #7f8c8d;">(${m.kategori})</span>
+            </div>
+        `;
+    });
+    dropdown.style.display = 'block';
+};
+
+// Fungsi saat obat dipilih dari hasil pencarian
+window.pilihObatFaktur = function(id, nama) {
+    document.getElementById('selectedMedicineId').value = id;
+    document.getElementById('inputCariObatBeli').value = nama;
+    document.getElementById('dropdownHasilObat').style.display = 'none';
+};
+
+function tambahItemKeranjangBeli() {
+    const obatId = parseInt(document.getElementById('selectedMedicineId').value);
+    const obatObj = masterObatList.find(m => m.id === obatId);
+    const nomorBatch = document.getElementById('inputBatch').value;
+    const jumlah = parseInt(document.getElementById('inputJumlah').value);
+    const hargaBeli = parseInt(document.getElementById('inputHargaBeli').value);
+    const tanggalEd = document.getElementById('inputEd').value;
+
+    if (!obatObj || !nomorBatch || !tanggalEd || jumlah <= 0 || hargaBeli <= 0) {
+        alert("Mohon pilih obat dari daftar pencarian, serta lengkapi Nomor Batch, Jumlah, Harga Beli, dan Tgl ED dengan benar!");
+        return;
+    }
+
+    keranjangBeli.push({
+        medicine_id: obatId,
+        nama_obat: obatObj.nama,
+        nomor_batch: nomorBatch,
+        jumlah: jumlah,
+        harga_beli_satuan: hargaBeli,
+        tanggal_kedaluwarsa: tanggalEd,
+        subtotal: jumlah * hargaBeli
+    });
+
+    renderDrafPembelian();
+    
+    // Reset kolom input obat setelah ditambah
+    document.getElementById('selectedMedicineId').value = '';
+    document.getElementById('inputCariObatBeli').value = '';
+    document.getElementById('inputBatch').value = '';
+    document.getElementById('inputJumlah').value = '1';
+    document.getElementById('inputHargaBeli').value = '0';
+    document.getElementById('inputEd').value = '';
 }
 
-// 2. Kirim data pembelian stok baru ke backend
-async function simpanPembelian(event) {
-    event.preventDefault();
+function renderDrafPembelian() {
+    const tbody = document.querySelector('#tabelDrafPembelian tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (keranjangBeli.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Belum ada item ditambahkan.</td></tr>';
+        return;
+    }
+
+    keranjangBeli.forEach((item, index) => {
+        tbody.innerHTML += `
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #ecf0f1;">${item.nama_obat}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #ecf0f1;">${item.nomor_batch}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #ecf0f1;">${item.jumlah}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #ecf0f1;">Rp ${item.harga_beli_satuan.toLocaleString('id-ID')}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #ecf0f1;">Rp ${item.subtotal.toLocaleString('id-ID')}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #ecf0f1;">${item.tanggal_kedaluwarsa}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #ecf0f1; text-align: center;"><button onclick="hapusItemBeli(${index})" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;"><i class="fa-solid fa-trash"></i></button></td>
+            </tr>
+        `;
+    });
+}
+
+function hapusItemBeli(index) {
+    keranjangBeli.splice(index, 1);
+    renderDrafPembelian();
+}
+
+async function prosesSimpanPembelian() {
+    if (keranjangBeli.length === 0) {
+        alert("Keranjang pembelian masih kosong!");
+        return;
+    }
+
+    const supplierId = parseInt(document.getElementById('selectSupplier').value);
+    const nomorFaktur = document.getElementById('nomorFaktur').value;
+
+    if (!nomorFaktur) {
+        alert("Nomor faktur wajib diisi!");
+        return;
+    }
+
+    const userLogin = localStorage.getItem('user_apotek') || "Admin";
 
     const payload = {
-        medicine_id: parseInt(document.getElementById('selectObat').value),
-        nomor_batch: document.getElementById('nomorBatch').value,
-        jumlah_stok: parseInt(document.getElementById('jumlahStok').value),
-        harga_beli: parseInt(document.getElementById('hargaBeli').value),
-        tanggal_kedaluwarsa: document.getElementById('tglExpired').value
+        supplier_id: supplierId,
+        nomor_faktur: nomorFaktur,
+        user_pembuat: userLogin,
+        items: keranjangBeli
     };
 
     try {
-        const response = await fetch(`${window.API_URL}/pembelian`, {
+        const res = await fetch(`${window.API_URL}/pembelian`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
-        const result = await response.json();
-
-        if (response.ok) {
-            tampilkanAlert("Berhasil", "Stok berhasil ditambahkan ke batch baru!", "sukses");
-            document.getElementById('formPembelian').reset();
+        const result = await res.json();
+        if (res.ok) {
+            alert("Faktur pembelian berhasil disimpan dan stok batch otomatis bertambah!");
+            keranjangBeli = [];
+            renderDrafPembelian();
+            document.getElementById('nomorFaktur').value = '';
         } else {
-            tampilkanAlert("Gagal Menyimpan", result.detail || 'Terjadi kesalahan pada sistem.', "error");
+            alert("Gagal menyimpan: " + (result.detail || "Terjadi kesalahan"));
         }
-    } catch (error) {
-        tampilkanAlert("Kesalahan Koneksi", "Gagal terhubung ke server backend!", "error");
+    } catch (e) {
+        console.error(e);
+        alert("Terjadi kesalahan koneksi ke server.");
     }
 }
+
+window.muatDropdownObat();

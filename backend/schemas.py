@@ -37,3 +37,22 @@ class PembelianCreate(BaseModel):
     jumlah_stok: int
     harga_beli: float
     tanggal_kedaluwarsa: date
+    
+class ItemBeliSchema(BaseModel):
+    medicine_id: int
+    nomor_batch: str
+    jumlah: int
+    harga_beli_satuan: int
+    tanggal_kedaluwarsa: str  # Format: "YYYY-MM-DD"
+
+class PembelianRequest(BaseModel):
+    supplier_id: int
+    nomor_faktur: str
+    user_pembuat: str
+    items: List[ItemBeliSchema]
+
+class SupplierCreate(BaseModel):
+    nama_supplier: str
+    kontak: str = None
+    telepon: str = None
+    alamat: str = None

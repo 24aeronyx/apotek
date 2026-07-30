@@ -140,12 +140,24 @@
             <i class="fa-solid fa-pills" style="font-size: 22px;"></i>
             <span>POS APOTEK</span>
         </div>
-        <ul class="sidebar-menu">
+        
+        <ul class="sidebar-menu" style="padding: 10px 0; margin: 0; list-style: none;">
+            
+            <!-- KELOMPOK 1: TRANSAKSI & OPERASIONAL -->
+            <li style="padding: 10px 20px 5px 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: bold;">Transaksi & Operasional</li>
             <li><a href="#" onclick="muatHalaman('/pages/kasir.html', this)" class="active"><i class="fa-solid fa-cash-register"></i> Kasir Utama</a></li>
             <li><a href="#" onclick="muatHalaman('/pages/pembelian.html', this)"><i class="fa-solid fa-truck-ramp-box"></i> Input Stok (Faktur)</a></li>
+            
+            <!-- KELOMPOK 2: MASTER & INVENTARIS -->
+            <li style="padding: 15px 20px 5px 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: bold; margin-top: 5px;">Data & Inventaris</li>
+            <li><a href="#" onclick="muatHalaman('/pages/supplier.html', this)"><i class="fa-solid fa-truck-field"></i> Data Supplier</a></li>
             <li><a href="#" onclick="muatHalaman('/pages/master_obat.html', this)"><i class="fa-solid fa-boxes-stacked"></i> Master Obat</a></li>
             <li><a href="#" onclick="muatHalaman('/pages/stok_opname.html', this)"><i class="fa-solid fa-boxes-packing"></i> Stok Opname & ED</a></li>
-            <li><a href="#" onclick="muatHalaman('/pages/dashboard.html', this)"><i class="fa-solid fa-chart-pie"></i> Dashboard & Laporan</a></li>
+            
+            <!-- KELOMPOK 3: LAPORAN -->
+            <li style="padding: 15px 20px 5px 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: bold; margin-top: 5px;">Analitik & Laporan</li>
+            <li><a href="#" onclick="muatHalaman('/pages/dashboard.html', this)"><i class="fa-solid fa-chart-pie"></i> Dashboard & Keuangan</a></li>
+            
         </ul>
     </div>
     
@@ -234,7 +246,10 @@
 
         if (url.includes('/pages/master_obat.html')) {
             scriptsToLoad.push('/static/js/master_obat.js');
-        } else if (url.includes('/pages/pembelian.html')) {
+        } else if (url.includes('/pages/supplier.html')) {
+            scriptsToLoad.push('/static/js/supplier.js'); // <-- Pastikan ini ada
+        }
+        else if (url.includes('/pages/pembelian.html')) {
             scriptsToLoad.push('/static/js/pembelian.js');
         } else if (url.includes('/pages/stok_opname.html')) {
             scriptsToLoad.push('/static/js/stok_opname.js');
@@ -244,6 +259,7 @@
             scriptsToLoad.push('/static/js/struk.js');
             scriptsToLoad.push('/static/app.js');
         }
+        // Catatan: Jika kode supplier.html menggunakan script inline, tidak perlu dimasukkan ke array scriptToLoad
 
         for (const src of scriptsToLoad) {
             await loadScript(src);
@@ -253,7 +269,12 @@
             if (typeof window.muatMasterObat === 'function') {
                 window.muatMasterObat();
             }
+        } else if (url.includes('/pages/supplier.html')) {
+            if (typeof window.muatSupplier === 'function') window.muatSupplier();
         } else if (url.includes('/pages/pembelian.html')) {
+            if (typeof window.muatDropdownObat === 'function') window.muatDropdownObat();
+        }
+        else if (url.includes('/pages/pembelian.html')) {
             if (typeof window.muatDropdownObat === 'function') {
                 window.muatDropdownObat();
             }

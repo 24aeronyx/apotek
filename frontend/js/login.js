@@ -29,7 +29,7 @@ async function prosesLogin(event) {
             localStorage.setItem('user_apotek', result.username);
 
             setTimeout(() => {
-                window.location.href = 'index.html';
+                window.location.href = '/';
             }, 1000);
         } else {
             pesanDiv.style.background = '#f8d7da';

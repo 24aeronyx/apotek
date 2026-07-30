@@ -11,45 +11,56 @@ from backend.models import Base
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
-# 1. Pastikan folder gambar tersedia
+# 1. Pastikan folder gambar backend tersedia
 os.makedirs("backend/static/images", exist_ok=True)
 
-# 2. Mount folder static backend (khusus untuk gambar dan aset backend) dengan awalan /media atau /backend-static
+# 2. Mount folder static backend (khusus untuk gambar yang di-upload)
 app.mount("/backend-static", StaticFiles(directory="backend/static"), name="backend_static")
 
-# 3. Mount folder frontend ke /static agar style.css, app.js, dll terbaca
+# 3. Mount folder frontend utama ke /static (karena main.py di backend, arahkan ke ../frontend atau root project)
 app.mount("/static", StaticFiles(directory="frontend"), name="frontend_static")
 
-# Tambahkan baris ini di bawah mount static frontend Anda
+# Mount folder pages agar bisa diakses langsung oleh fetch dinamis
+app.mount("/pages", StaticFiles(directory="frontend/pages"), name="pages_static")
+
+# Fix path gambar lama jika diperlukan
 app.mount("/static/images", StaticFiles(directory="backend/static/images"), name="old_images_fix")
+
+# --- ROUTE HALAMAN (MENGARAH KE FOLDER FRONTEND) ---
 
 @app.get("/")
 def baca_index():
     return FileResponse("frontend/index.html")
 
-@app.get("/dashboard.html")
-def halaman_dashboard():
-    return FileResponse("frontend/dashboard.html")
-
-@app.get("/master_obat.html")
-def halaman_master():
-    return FileResponse("frontend/master_obat.html")
-
-@app.get("/pembelian.html")
-def halaman_pembelian():
-    return FileResponse("frontend/pembelian.html")
-
-@app.get("/login.html")
-def halaman_login():
-    return FileResponse("frontend/login.html")
-
-@app.get("/stok_opname.html")
-def halaman_stok_opname():
-    return FileResponse("frontend/stok_opname.html")
-
 @app.get("/index.html")
 def halaman_index():
     return FileResponse("frontend/index.html")
+
+@app.get("/pages/kasir.html")
+def halaman_kasir():
+    return FileResponse("frontend/pages/kasir.html")
+
+@app.get("/pages/dashboard.html")
+def halaman_dashboard():
+    return FileResponse("frontend/pages/dashboard.html")
+
+@app.get("/pages/master_obat.html")
+def halaman_master():
+    return FileResponse("frontend/pages/master_obat.html")
+
+@app.get("/pages/pembelian.html")
+def halaman_pembelian():
+    return FileResponse("frontend/pages/pembelian.html")
+
+@app.get("/pages/login.html")
+def halaman_login():
+    return FileResponse("frontend/pages/login.html")
+
+@app.get("/pages/stok_opname.html")
+def halaman_stok_opname():
+    return FileResponse("frontend/pages/stok_opname.html")
+
+# --- MIDDLEWARE & ROUTER BACKEND ---
 
 app.add_middleware(
     CORSMiddleware,
@@ -74,7 +85,6 @@ def upload_gambar(file: UploadFile = File(...)):
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
             
-        # PASTIKAN MENGGUNAKAN /backend-static/
         return {"url_gambar": f"http://127.0.0.1:8000/backend-static/images/{file.filename}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

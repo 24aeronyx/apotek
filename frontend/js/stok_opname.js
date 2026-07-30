@@ -79,7 +79,6 @@ function tutupOpnameModal() {
     document.getElementById("modalOpname").style.display = "none";
 }
 
-// 4. Kirim Data Penyesuaian ke Backend FastAPI
 async function handleOpnameSubmit(e) {
     e.preventDefault();
 
@@ -103,17 +102,58 @@ async function handleOpnameSubmit(e) {
             body: JSON.stringify(payload)
         });
 
+        const result = await response.json();
+
         if (response.ok) {
-            const result = await response.json();
-            alert(`Stok Berhasil Disesuaikan!\nSelisih: ${result.selisih}`);
             tutupOpnameModal();
+            // Tampilkan modal alert sukses yang elegan
+            tampilkanAlertCustom(
+                "Berhasil!", 
+                `Stok opname berhasil disimpan.<br>Selisih perubahan: <strong style="color: ${result.selisih >= 0 ? '#27ae60' : '#e74c3c'}">${result.selisih > 0 ? '+' + result.selisih : result.selisih} Unit</strong>`, 
+                "success"
+            );
             loadBatches(); // Refresh tabel
         } else {
-            const err = await response.json();
-            alert(`Gagal: ${err.detail}`);
+            tampilkanAlertCustom("Gagal", result.detail || "Terjadi kesalahan pada sistem.", "error");
         }
     } catch (error) {
         console.error("Error opname:", error);
-        alert("Terjadi kesalahan koneksi server!");
+        tampilkanAlertCustom("Kesalahan Koneksi", "Gagal terhubung ke server backend!", "error");
     }
+}
+
+// Fungsi pendukung untuk memunculkan modal alert kustom
+function tampilkanAlertCustom(judul, pesan, tipe = "success") {
+    let alertModal = document.getElementById("modalAlertCustom");
+    if (!alertModal) {
+        // Buat elemen modal secara otomatis jika belum ada di HTML
+        const div = document.createElement("div");
+        div.id = "modalAlertCustom";
+        div.style.cssText = "display: flex; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;";
+        div.innerHTML = `
+            <div style="background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center;">
+                <div id="alertCustomIcon" style="font-size: 45px; margin-bottom: 10px;"></div>
+                <h3 id="alertCustomTitle" style="margin-top: 0; color: #2c3e50;"></h3>
+                <p id="alertCustomMessage" style="color: #555; font-size: 14px; margin-bottom: 20px;"></p>
+                <button type="button" onclick="document.getElementById('modalAlertCustom').style.display='none'" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">OK</button>
+            </div>
+        `;
+        document.body.appendChild(div);
+        alertModal = div;
+    }
+
+    const iconEl = document.getElementById("alertCustomIcon");
+    const titleEl = document.getElementById("alertCustomTitle");
+    const msgEl = document.getElementById("alertCustomMessage");
+
+    titleEl.innerText = judul;
+    msgEl.innerHTML = pesan;
+
+    if (tipe === "success") {
+        iconEl.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #2ecc71;"></i>';
+    } else {
+        iconEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color: #e74c3c;"></i>';
+    }
+
+    alertModal.style.display = "flex";
 }

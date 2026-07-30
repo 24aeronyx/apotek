@@ -93,9 +93,23 @@ function hapusMasterObat(id) {
     document.getElementById('modalHapus').style.display = 'flex';
 }
 
-function tampilkanAlert(judul, pesan) {
+function tampilkanAlert(judul, pesan, tipe = "success") {
     document.getElementById('alertTitle').innerText = judul;
     document.getElementById('alertMessage').innerText = pesan;
+    
+    // Sesuaikan ikon dan warna berdasarkan tipe
+    const iconContainer = document.querySelector("#modalAlert .modal-content div:first-child");
+    if (tipe === "success") {
+        iconContainer.style.color = "#2ecc71";
+        iconContainer.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+    } else if (tipe === "info") {
+        iconContainer.style.color = "#3498db";
+        iconContainer.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+    } else {
+        iconContainer.style.color = "#e67e22";
+        iconContainer.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+    }
+
     document.getElementById('modalAlert').style.display = 'flex';
 }
 
@@ -174,6 +188,23 @@ async function simpanMasterObat(event) {
         }
     }
 
+    // Jika sedang mode Edit, cek apakah ada perubahan data dibandingkan data lama
+    if (id) {
+        const dataLama = listMasterObat.find(o => o.id == id);
+        if (dataLama) {
+            const isNamaSama = dataLama.nama === nama;
+            const isKategoriSama = dataLama.kategori === kategori;
+            const isHargaSama = dataLama.harga_jual === harga_jual;
+            const isGambarSama = !urlGambarFinal; // Jika tidak upload file baru
+
+            if (isNamaSama && isKategoriSama && isHargaSama && isGambarSama) {
+                tutupModal();
+                tampilkanAlert("Informasi", "Tidak ada perubahan data yang disimpan.", "info");
+                return;
+            }
+        }
+    }
+
     const payload = {
         nama: nama,
         kategori: kategori,
@@ -189,17 +220,23 @@ async function simpanMasterObat(event) {
         method = 'PUT';
     }
 
-    const response = await fetch(endpoint, {
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
+    try {
+        const response = await fetch(endpoint, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
 
-    if (response.ok) {
-        tutupModal();
-        muatMasterObat();
-    } else {
-        const errJson = await response.json().catch(() => ({}));
-        tampilkanAlert("Gagal Menyimpan", errJson.detail || "Gagal menyimpan master obat.");
+        if (response.ok) {
+            tutupModal();
+            muatMasterObat();
+            tampilkanAlert("Berhasil", id ? "Data master obat berhasil diperbarui!" : "Obat baru berhasil ditambahkan!", "success");
+        } else {
+            const errJson = await response.json().catch(() => ({}));
+            tampilkanAlert("Gagal Menyimpan", errJson.detail || "Terjadi kesalahan saat menyimpan data.", "error");
+        }
+    } catch (error) {
+        console.error("Error simpan master:", error);
+        tampilkanAlert("Kesalahan Koneksi", "Gagal terhubung ke server backend!", "error");
     }
 }

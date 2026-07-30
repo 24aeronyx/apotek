@@ -88,3 +88,38 @@ th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ecf0f1; }
     object-fit: cover !important;
     border-radius: 6px;
 }
+
+/* Atur ukuran kertas cetak agar pas untuk printer thermal / gulung */
+@media print {
+    @page {
+        size: 80mm auto; /* Lebar standar kertas thermal 80mm, panjang menyesuaikan isi */
+        margin: 0;       /* Hilangkan margin default dari browser/printer */
+    }
+
+    body {
+        margin: 0;
+        background: white !important;
+    }
+
+    /* Sembunyikan semua elemen selain area struk */
+    body * {
+        visibility: hidden !important;
+    }
+
+    #areaStruk, #areaStruk * {
+        visibility: visible !important;
+    }
+
+    /* Posisikan struk mulai dari pojok kiri-atas kertas thermal */
+    #areaStruk {
+        display: block !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: 80mm !important;
+        margin: 0 !important;
+        padding: 5px !important;
+    }
+}

@@ -33,63 +33,74 @@ async function muatDaftarObat() {
 }
 
 function renderGrid(data) {
-  const grid = document.getElementById("productGrid");
-  grid.innerHTML = "";
+    const grid = document.getElementById("productGrid");
+    grid.innerHTML = "";
 
-  // Urutkan data: yang stoknya habis (0) akan ditaruh di bawah
-  data.sort((a, b) => {
-    const habisA = a.stok === 0 ? 1 : 0;
-    const habisB = b.stok === 0 ? 1 : 0;
-    return habisA - habisB;
-  });
-
-  data.forEach((obat) => {
-    const itemDiKeranjang = keranjang.find((item) => item.id_obat === obat.id);
-    const qtySekarang = itemDiKeranjang ? itemDiKeranjang.jumlah : 0;
-    const stokTersedia = obat.stok - qtySekarang;
-    const isHabis = obat.stok === 0;
-
-    const card = document.createElement("div");
-    card.className = "card";
-
-    let bagianGambar = "";
-    if (obat.gambar && obat.gambar.trim() !== "" && obat.gambar !== "null" && obat.gambar !== "undefined") {
-        bagianGambar = `
-            <div class="product-img-container" style="width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 8px 8px 0 0;">
-                <img src="${obat.gambar}" alt="${obat.nama}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px 8px 0 0;"
-                    onerror="this.parentElement.innerHTML='<div style=&quot;width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 8px 8px 0 0;&quot;><i class=&quot;fa-solid fa-pills&quot; style=&quot;color: #94a3b8; font-size: 32px;&quot;></i></div>'">
+    // Handle jika data produk kosong / belum ada sama sekali
+    if (!Array.isArray(data) || data.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: white; border-radius: 12px; border: 1px solid #ecf0f1;">
+                <i class="fa-solid fa-box-open" style="font-size: 48px; color: #94a3b8; margin-bottom: 15px;"></i>
+                <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 16px;">Belum Ada Produk Tersedia</h4>
+                <p style="margin: 0; color: #7f8c8d; font-size: 14px;">Silakan tambahkan data obat melalui menu <strong>Master Obat</strong> atau input stok terlebih dahulu.</p>
             </div>
         `;
-    } else {
-        bagianGambar = `
-            <div class="product-img-container" style="width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 8px 8px 0 0;">
-                <div class="fallback-icon">
-                    <i class="fa-solid fa-pills" style="color: #94a3b8; font-size: 32px;"></i>
-                </div>
-            </div>
-        `;
+        return;
     }
 
-    card.innerHTML = `
-        ${bagianGambar}
-        <h4>${obat.nama}</h4>
-        <p style="color: #27ae60; font-weight: bold; margin: 5px 0;">${formatRupiah(obat.harga)}</p>
-        <p class="stok ${isHabis ? "stok-habis" : ""}">
-            ${isHabis ? 'Stok Kosong' : 'Sisa Stok: ' + obat.stok}
-        </p>
-        
-        <div class="qty-control">
-            <button class="btn-qty" onclick="ubahQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, -1, ${obat.stok})" ${qtySekarang === 0 ? "disabled" : ""}><i class="fa-solid fa-minus"></i></button>
+    // Urutkan data: yang stoknya habis (0) akan ditaruh di bawah
+    data.sort((a, b) => {
+        const habisA = a.stok === 0 ? 1 : 0;
+        const habisB = b.stok === 0 ? 1 : 0;
+        return habisA - habisB;
+    });
+
+    data.forEach((obat) => {
+        const itemDiKeranjang = keranjang.find((item) => item.id_obat === obat.id);
+        const qtySekarang = itemDiKeranjang ? itemDiKeranjang.jumlah : 0;
+        const stokTersedia = obat.stok - qtySekarang;
+        const isHabis = obat.stok === 0;
+
+        const card = document.createElement("div");
+        card.className = "card";
+
+        let bagianGambar = "";
+        if (obat.gambar && obat.gambar.trim() !== "" && obat.gambar !== "null" && obat.gambar !== "undefined") {
+            bagianGambar = `
+                <div class="product-img-container" style="width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 8px 8px 0 0;">
+                    <img src="${obat.gambar}" alt="${obat.nama}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px 8px 0 0;"
+                         onerror="this.parentElement.innerHTML='<div style=&quot;width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 8px 8px 0 0;&quot;><i class=&quot;fa-solid fa-pills&quot; style=&quot;color: #94a3b8; font-size: 32px;&quot;></i></div>'">
+                </div>
+            `;
+        } else {
+            bagianGambar = `
+                <div class="product-img-container" style="width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 8px 8px 0 0;">
+                    <div class="fallback-icon">
+                        <i class="fa-solid fa-pills" style="color: #94a3b8; font-size: 32px;"></i>
+                    </div>
+                </div>
+            `;
+        }
+
+        card.innerHTML = `
+            ${bagianGambar}
+            <h4>${obat.nama}</h4>
+            <p style="color: #27ae60; font-weight: bold; margin: 5px 0;">${formatRupiah(obat.harga)}</p>
+            <p class="stok ${isHabis ? "stok-habis" : ""}">
+                ${isHabis ? 'Stok Kosong' : 'Sisa Stok: ' + obat.stok}
+            </p>
             
-            <!-- Menggunakan class CSS kustom agar tampilannya menyatu seperti teks asli -->
-            <input type="number" class="qty-input-custom" value="${qtySekarang}" min="0" max="${obat.stok}" 
-                   oninput="ketikQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, this.value, ${obat.stok})">
-                   
-            <button class="btn-qty" onclick="ubahQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, 1, ${obat.stok})" ${stokTersedia <= 0 ? "disabled" : ""}><i class="fa-solid fa-plus"></i></button>
-        </div>
-    `;
-    grid.appendChild(card);
-  });
+            <div class="qty-control">
+                <button class="btn-qty" onclick="ubahQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, -1, ${obat.stok})" ${qtySekarang === 0 ? "disabled" : ""}><i class="fa-solid fa-minus"></i></button>
+                
+                <input type="number" class="qty-input-custom" value="${qtySekarang}" min="0" max="${obat.stok}" 
+                       oninput="ketikQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, this.value, ${obat.stok})">
+                       
+                <button class="btn-qty" onclick="ubahQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, 1, ${obat.stok})" ${stokTersedia <= 0 ? "disabled" : ""}><i class="fa-solid fa-plus"></i></button>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
 }
 
 function filterObat() {

@@ -35,7 +35,7 @@
             <button type="button" onclick="tutupOpnameModal()" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">&times;</button>
         </div>
         
-        <form id="formOpname">
+        <form id="formOpname" onsubmit="handleOpnameSubmit(event)">
             <input type="hidden" id="opnameBatchId">
             
             <div style="margin-bottom: 15px;">

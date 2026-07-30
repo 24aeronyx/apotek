@@ -14,21 +14,17 @@ def lihat_laporan(user: User = Depends(require_permission("akses_laporan"))):
         
         hasil = []
         for s in sales:
-            # Hitung total item dan total uang (omzet) per nota
-            items = db.query(SaleItem, Medicine).join(Medicine, SaleItem.medicine_id == Medicine.id).filter(SaleItem.sale_id == s.id).all()
-            
-            total_item = 0
-            grand_total = 0
-            for sale_item, medicine in items:
-                total_item += sale_item.jumlah
-                grand_total += medicine.harga_jual * sale_item.jumlah
+            # Ambil item terkait untuk menghitung jumlah item jika diperlukan
+            items = db.query(SaleItem).filter(SaleItem.sale_id == s.id).all()
+            total_item = sum(item.jumlah for item in items)
             
             hasil.append({
                 "id_nota": s.id,
                 "kasir": s.kasir,
-                "waktu": s.waktu_transaksi.strftime("%Y-%m-%d %H:%M:%S"),
+                "waktu": s.waktu_transaksi.strftime("%Y-%m-%d %H:%M:%S") if s.waktu_transaksi else "",
                 "total_item": int(total_item),
-                "grand_total": int(grand_total) # <-- Menambahkan total pendapatan per nota
+                "grand_total": int(s.grand_total or 0),  # Mengambil langsung dari kolom database Sale
+                "total_laba": int(s.total_laba or 0)     # Mengambil langsung dari kolom database Sale
             })
             
         return hasil

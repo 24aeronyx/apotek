@@ -59,7 +59,11 @@ class Sale(Base):
     id = Column(Integer, primary_key=True, index=True)
     kasir = Column(String(50))
     total_item = Column(Integer)
+    grand_total = Column(Integer, default=0) # Total omzet nota
+    total_laba = Column(Integer, default=0)  # Total laba bersih nota
     waktu_transaksi = Column(DateTime, default=datetime.now)
+
+    items = relationship("SaleItem", back_populates="sale")
 
 class SaleItem(Base):
     __tablename__ = "sale_items"
@@ -68,17 +72,65 @@ class SaleItem(Base):
     sale_id = Column(Integer, ForeignKey("sales.id"))
     medicine_id = Column(Integer, ForeignKey("medicines.id"))
     jumlah = Column(Integer)
+    harga_jual = Column(Integer, default=0)  # Harga jual satuan saat transaksi terjadi
+    harga_beli = Column(Integer, default=0)  # Harga modal/beli satuan dari batch saat transaksi
+    subtotal = Column(Integer, default=0)    # Total harga jual (jumlah * harga_jual)
+
+    sale = relationship("Sale", back_populates="items")
+    medicine = relationship("Medicine")
 
 class KartuStok(Base):
     __tablename__ = "kartu_stok"
 
     id = Column(Integer, primary_key=True, index=True)
-    obat_id = Column(Integer, ForeignKey("medicines.id"))  # Diubah dari "obat.id" ke "medicines.id"
+    obat_id = Column(Integer, ForeignKey("medicines.id"))  
     tanggal = Column(DateTime, default=datetime.utcnow)
     jenis_transaksi = Column(String(256))  # Contoh: "PENJUALAN", "PEMBELIAN", "OPNAME", "PEMUSNAHAN"
-    jumlah = Column(Integer)          # Nilai positif (masuk) atau negatif (keluar)
-    stok_sisa = Column(Integer)       # Sisa stok setelah transaksi
+    jumlah = Column(Integer)              # Nilai positif (masuk) atau negatif (keluar)
+    stok_sisa = Column(Integer)           # Sisa stok setelah transaksi
     keterangan = Column(String(256), nullable=True)
 
-    # Anda juga bisa menambahkan relasi SQLAlchemy agar gampang dipanggil
+    medicine = relationship("Medicine")
+
+# --- TAMBAHAN MODEL SUPPLIER & PEMBELIAN (FAKTUR MASUK) ---
+
+class Supplier(Base):
+    __tablename__ = "suppliers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nama_supplier = Column(String(100), unique=True, index=True)
+    kontak = Column(String(50), nullable=True)
+    telepon = Column(String(20), nullable=True)
+    alamat = Column(Text, nullable=True)
+
+    purchases = relationship("Purchase", back_populates="supplier")
+
+
+class Purchase(Base):
+    __tablename__ = "purchases"
+
+    id = Column(Integer, primary_key=True, index=True)
+    supplier_id = Column(Integer, ForeignKey("suppliers.id"))
+    nomor_faktur = Column(String(100), unique=True)
+    tanggal_pembelian = Column(DateTime, default=datetime.now)
+    total_pembayaran = Column(Integer, default=0)
+    user_pembuat = Column(String(50), nullable=True)
+
+    supplier = relationship("Supplier", back_populates="purchases")
+    items = relationship("PurchaseItem", back_populates="purchase", cascade="all, delete-orphan")
+
+
+class PurchaseItem(Base):
+    __tablename__ = "purchase_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    purchase_id = Column(Integer, ForeignKey("purchases.id"))
+    medicine_id = Column(Integer, ForeignKey("medicines.id"))
+    nomor_batch = Column(String(100))
+    jumlah = Column(Integer)
+    harga_beli_satuan = Column(Integer)
+    tanggal_kedaluwarsa = Column(Date)
+    subtotal = Column(Integer)
+
+    purchase = relationship("Purchase", back_populates="items")
     medicine = relationship("Medicine")

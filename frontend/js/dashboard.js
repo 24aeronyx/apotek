@@ -74,7 +74,10 @@ async function muatDashboard() {
         dataBulanIni.forEach(item => {
             totalItemTerjual += item.total_item;
             totalOmzet += item.grand_total || 0;
-            let labaTransaksi = item.estimasi_laba || 0; 
+            
+            // PERBAIKAN DI SINI:
+            // Membaca 'total_laba' atau 'perkiraan_laba' atau 'estimasi_laba' agar kompatibel dengan berbagai nama respons dari backend
+            let labaTransaksi = item.total_laba ?? item.perkiraan_laba ?? item.estimasi_laba ?? 0; 
             totalLabaBersih += labaTransaksi;
 
             let tanggalSaja = item.waktu.split(' ')[0];

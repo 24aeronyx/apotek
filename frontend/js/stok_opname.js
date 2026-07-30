@@ -1,23 +1,18 @@
 const API_URL = "http://127.0.0.1:8000"; // Sesuaikan URL backend Anda
-let modalOpname;
 
 document.addEventListener("DOMContentLoaded", () => {
-    modalOpname = new bootstrap.Modal(document.getElementById("modalOpname"));
     loadBatches();
 
     // Listener Submit Form Opname
     document.getElementById("formOpname").addEventListener("submit", handleOpnameSubmit);
 });
 
-// 1. Fetch data Batch Obat dari Backend
-// 1. Fetch data langsung dari endpoint /obat yang sudah Anda miliki
+// 1. Fetch data langsung dari endpoint /obat
 async function loadBatches() {
     try {
         const response = await fetch(`${API_URL}/obat`); 
         const medicines = await response.json();
         
-        // Karena endpoint /obat mengembalikan list obat yang di dalamnya ada array "batches",
-        // kita perlu meratakan (flatten) data tersebut agar tabel menampilkan per batch.
         let allBatches = [];
         medicines.forEach(m => {
             if (m.batches && m.batches.length > 0) {
@@ -47,20 +42,21 @@ function renderTable(batches) {
     tbody.innerHTML = "";
 
     if (!batches || batches.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Belum ada data batch obat.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted" style="padding: 20px; text-align: center;">Belum ada data batch obat.</td></tr>`;
         return;
     }
 
     batches.forEach(b => {
         const tr = document.createElement("tr");
+        tr.style.borderBottom = "1px solid #dee2e6";
         tr.innerHTML = `
-            <td><span class="badge bg-secondary">${b.nomor_batch || '-'}</span></td>
-            <td class="fw-bold">${b.medicine ? b.medicine.nama : 'Obat ID: ' + b.medicine_id}</td>
-            <td>Rp ${b.harga_beli.toLocaleString('id-ID')}</td>
-            <td><span class="badge bg-outline text-dark border">${b.tanggal_kedaluwarsa || '-'}</span></td>
-            <td><span class="badge bg-info text-dark fs-6">${b.jumlah_stok}</span></td>
-            <td>
-                <button class="btn btn-sm btn-outline-success fw-bold" onclick="openOpnameModal(${b.id}, '${b.medicine ? b.medicine.nama : 'Obat'} (Batch ${b.nomor_batch})', ${b.jumlah_stok})">
+            <td style="padding: 12px;"><span style="background: #6c757d; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px;">${b.nomor_batch || '-'}</span></td>
+            <td style="padding: 12px; font-weight: bold;">${b.medicine ? b.medicine.nama : 'Obat ID: ' + b.medicine_id}</td>
+            <td style="padding: 12px;">Rp ${b.harga_beli.toLocaleString('id-ID')}</td>
+            <td style="padding: 12px;">${b.tanggal_kedaluwarsa || '-'}</td>
+            <td style="padding: 12px;"><span style="background: #17a2b8; color: white; padding: 3px 8px; border-radius: 4px; font-weight: bold;">${b.jumlah_stok}</span></td>
+            <td style="padding: 12px; text-align: center;">
+                <button type="button" style="background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;" onclick="openOpnameModal(${b.id}, '${b.medicine ? b.medicine.nama : 'Obat'} (Batch ${b.nomor_batch})', ${b.jumlah_stok})">
                     <i class="fa-solid fa-pen-to-square me-1"></i> Opname / Adjust
                 </button>
             </td>
@@ -69,15 +65,20 @@ function renderTable(batches) {
     });
 }
 
-// 3. Buka Modal Form Opname
+// 3. Buka Modal Form Opname (Murni CSS Display Flex)
 function openOpnameModal(batchId, namaObat, stokLama) {
     document.getElementById("opnameBatchId").value = batchId;
     document.getElementById("opnameNamaObat").value = namaObat;
     document.getElementById("opnameStokLama").value = stokLama;
-    document.getElementById("opnameStokBaru").value = stokLama; // Default disamakan
+    document.getElementById("opnameStokBaru").value = stokLama; 
     document.getElementById("opnameCatatan").value = "";
     
-    modalOpname.show();
+    document.getElementById("modalOpname").style.display = "flex";
+}
+
+// Tutup Modal
+function tutupOpnameModal() {
+    document.getElementById("modalOpname").style.display = "none";
 }
 
 // 4. Kirim Data Penyesuaian ke Backend FastAPI
@@ -107,7 +108,7 @@ async function handleOpnameSubmit(e) {
         if (response.ok) {
             const result = await response.json();
             alert(`Stok Berhasil Disesuaikan!\nSelisih: ${result.selisih}`);
-            modalOpname.hide();
+            tutupOpnameModal();
             loadBatches(); // Refresh tabel
         } else {
             const err = await response.json();

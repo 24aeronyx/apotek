@@ -2,6 +2,37 @@ window.API_URL = window.API_URL || window.location.origin || "http://127.0.0.1:8
 let keranjangBeli = [];
 let masterObatList = [];
 
+// Fungsi helper penampil modal kustom
+function tampilkanAlertPembelian(judul, pesan, tipe = "success") {
+    const titleEl = document.getElementById('alertTitlePembelian');
+    const msgEl = document.getElementById('alertMessagePembelian');
+    const iconEl = document.getElementById('alertIconContainer');
+    const modalEl = document.getElementById('modalAlertPembelian');
+
+    if (titleEl) titleEl.innerText = judul;
+    if (msgEl) msgEl.innerText = pesan;
+
+    if (iconEl) {
+        if (tipe === "success") {
+            iconEl.style.color = "#2ecc71";
+            iconEl.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+        } else if (tipe === "error") {
+            iconEl.style.color = "#e74c3c";
+            iconEl.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+        } else {
+            iconEl.style.color = "#3498db";
+            iconEl.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+        }
+    }
+
+    if (modalEl) modalEl.style.display = 'flex';
+}
+
+window.tutupModalAlertPembelian = function() {
+    const modalEl = document.getElementById('modalAlertPembelian');
+    if (modalEl) modalEl.style.display = 'none';
+};
+
 window.muatDropdownObat = async function() {
     try {
         const resSup = await fetch(`${window.API_URL}/suppliers`);
@@ -21,7 +52,6 @@ window.muatDropdownObat = async function() {
     }
 };
 
-// Fungsi filter pencarian obat secara instan
 window.filterDropdownObat = function() {
     const keyword = document.getElementById('inputCariObatBeli').value.toLowerCase();
     const dropdown = document.getElementById('dropdownHasilObat');
@@ -50,23 +80,23 @@ window.filterDropdownObat = function() {
     dropdown.style.display = 'block';
 };
 
-// Fungsi saat obat dipilih dari hasil pencarian
 window.pilihObatFaktur = function(id, nama) {
     document.getElementById('selectedMedicineId').value = id;
     document.getElementById('inputCariObatBeli').value = nama;
     document.getElementById('dropdownHasilObat').style.display = 'none';
 };
 
-function tambahItemKeranjangBeli() {
-    const obatId = parseInt(document.getElementById('selectedMedicineId').value);
+window.tambahItemKeranjangBeli = function() {
+    const obatIdVal = document.getElementById('selectedMedicineId').value;
+    const obatId = parseInt(obatIdVal);
     const obatObj = masterObatList.find(m => m.id === obatId);
     const nomorBatch = document.getElementById('inputBatch').value;
     const jumlah = parseInt(document.getElementById('inputJumlah').value);
     const hargaBeli = parseInt(document.getElementById('inputHargaBeli').value);
     const tanggalEd = document.getElementById('inputEd').value;
 
-    if (!obatObj || !nomorBatch || !tanggalEd || jumlah <= 0 || hargaBeli <= 0) {
-        alert("Mohon pilih obat dari daftar pencarian, serta lengkapi Nomor Batch, Jumlah, Harga Beli, dan Tgl ED dengan benar!");
+    if (!obatObj || !obatIdVal || !nomorBatch || !tanggalEd || jumlah <= 0 || hargaBeli <= 0) {
+        tampilkanAlertPembelian("Peringatan", "Mohon pilih obat dari daftar pencarian, serta lengkapi Nomor Batch, Jumlah, Harga Beli, dan Tgl ED dengan benar!", "error");
         return;
     }
 
@@ -89,7 +119,7 @@ function tambahItemKeranjangBeli() {
     document.getElementById('inputJumlah').value = '1';
     document.getElementById('inputHargaBeli').value = '0';
     document.getElementById('inputEd').value = '';
-}
+};
 
 function renderDrafPembelian() {
     const tbody = document.querySelector('#tabelDrafPembelian tbody');
@@ -117,22 +147,28 @@ function renderDrafPembelian() {
     });
 }
 
-function hapusItemBeli(index) {
+window.hapusItemBeli = function(index) {
     keranjangBeli.splice(index, 1);
     renderDrafPembelian();
-}
+};
 
-async function prosesSimpanPembelian() {
+window.prosesSimpanPembelian = async function() {
     if (keranjangBeli.length === 0) {
-        alert("Keranjang pembelian masih kosong!");
+        tampilkanAlertPembelian("Peringatan", "Keranjang pembelian masih kosong!", "error");
         return;
     }
 
-    const supplierId = parseInt(document.getElementById('selectSupplier').value);
+    const supplierEl = document.getElementById('selectSupplier');
+    if (!supplierEl || !supplierEl.value) {
+        tampilkanAlertPembelian("Peringatan", "Silakan pilih supplier terlebih dahulu!", "error");
+        return;
+    }
+
+    const supplierId = parseInt(supplierEl.value);
     const nomorFaktur = document.getElementById('nomorFaktur').value;
 
     if (!nomorFaktur) {
-        alert("Nomor faktur wajib diisi!");
+        tampilkanAlertPembelian("Peringatan", "Nomor faktur wajib diisi!", "error");
         return;
     }
 
@@ -154,17 +190,17 @@ async function prosesSimpanPembelian() {
 
         const result = await res.json();
         if (res.ok) {
-            alert("Faktur pembelian berhasil disimpan dan stok batch otomatis bertambah!");
+            tampilkanAlertPembelian("Berhasil", "Faktur pembelian berhasil disimpan dan stok batch otomatis bertambah!", "success");
             keranjangBeli = [];
             renderDrafPembelian();
             document.getElementById('nomorFaktur').value = '';
         } else {
-            alert("Gagal menyimpan: " + (result.detail || "Terjadi kesalahan"));
+            tampilkanAlertPembelian("Gagal Menyimpan", result.detail || "Terjadi kesalahan pada server.", "error");
         }
     } catch (e) {
         console.error(e);
-        alert("Terjadi kesalahan koneksi ke server.");
+        tampilkanAlertPembelian("Kesalahan Koneksi", "Gagal terhubung ke server backend.", "error");
     }
-}
+};
 
 window.muatDropdownObat();

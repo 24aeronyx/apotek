@@ -56,3 +56,15 @@ class SupplierCreate(BaseModel):
     kontak: str = None
     telepon: str = None
     alamat: str = None
+    
+class ItemReturSchema(BaseModel):
+    medicine_id: int
+    jumlah: int
+    kondisi: str  # "layak" atau "rusak"
+    nomor_batch: str = None # Jika ingin dikembalikan ke batch tertentu
+
+class ReturPenjualanCreate(BaseModel):
+    nomor_faktur_penjualan: str
+    alasan: str
+    user_penerima: str
+    items: List[ItemReturSchema]

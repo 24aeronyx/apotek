@@ -134,3 +134,21 @@ class PurchaseItem(Base):
 
     purchase = relationship("Purchase", back_populates="items")
     medicine = relationship("Medicine")
+    
+class ReturPenjualan(Base):
+    __tablename__ = "retur_penjualan"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nomor_faktur_penjualan = Column(String(256), index=True)
+    tanggal_retur = Column(DateTime, default=datetime.utcnow)
+    alasan = Column(String(256))
+    user_penerima = Column(String(256))
+
+class ItemReturPenjualan(Base):
+    __tablename__ = "item_retur_penjualan"
+
+    id = Column(Integer, primary_key=True, index=True)
+    retur_id = Column(Integer, ForeignKey("retur_penjualan.id"))
+    medicine_id = Column(Integer, ForeignKey("medicines.id"))
+    jumlah = Column(Integer)
+    kondisi = Column(String(256)) # Contoh: "Baik/Layak Jual" atau "Rusak"

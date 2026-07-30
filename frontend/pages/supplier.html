@@ -60,5 +60,29 @@
     </div>
 </div>
 
+<!-- Modal Konfirmasi Hapus Supplier -->
+<div id="modalHapusSupplier" class="modal-overlay" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+    <div class="modal-content" style="background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center;">
+        <div style="font-size: 45px; color: #e74c3c; margin-bottom: 10px;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <h3 style="margin-top: 0; color: #2c3e50;">Konfirmasi Hapus</h3>
+        <p style="color: #555; font-size: 14px; margin-bottom: 20px;">Apakah Anda yakin ingin menghapus data supplier ini?</p>
+        <input type="hidden" id="supplierIdDihapus">
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button type="button" onclick="tutupModalHapusSupplier()" style="background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Batal</button>
+            <button type="button" onclick="eksekusiHapusSupplier()" style="background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Ya, Hapus</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Peringatan / Informasi Kustom -->
+<div id="modalAlertSupplier" class="modal-overlay" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+    <div class="modal-content" style="background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center;">
+        <div id="alertSupplierIcon" style="font-size: 45px; color: #3498db; margin-bottom: 10px;"><i class="fa-solid fa-circle-info"></i></div>
+        <h3 style="margin-top: 0; color: #2c3e50;" id="alertSupplierTitle">Informasi</h3>
+        <p style="color: #555; font-size: 14px; margin-bottom: 20px;" id="alertSupplierMessage">Pesan sistem...</p>
+        <button type="button" onclick="tutupModalAlertSupplier()" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">OK</button>
+    </div>
+</div>
+
 <!-- Memanggil JavaScript Supplier -->
 <script src="/static/js/supplier.js"></script>

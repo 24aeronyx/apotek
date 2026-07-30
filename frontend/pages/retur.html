@@ -1,0 +1,70 @@
+<div class="container" style="max-width: 1100px; margin: auto;">
+    <div class="card-section" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1; margin-bottom: 20px;">
+        
+        <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 20px;">Form Retur Penjualan (Pengembalian Obat Pasien)</h3>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <div>
+                <label style="font-weight: bold; display: block; margin-bottom: 5px; color: #2c3e50; font-size: 14px;">No. Faktur Penjualan Asal:</label>
+                <input type="text" id="fakturAsal" placeholder="Contoh: #INV-2026-001" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box;">
+            </div>
+            <div>
+                <label style="font-weight: bold; display: block; margin-bottom: 5px; color: #2c3e50; font-size: 14px;">Alasan Retur:</label>
+                <input type="text" id="alasanRetur" placeholder="Contoh: Salah resep / Pasien tidak cocok" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box;">
+            </div>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #ecf0f1; margin-bottom: 20px;">
+            <h4 style="margin-top: 0; color: #2c3e50; font-size: 15px; margin-bottom: 15px;">Item Obat yang Dikembalikan</h4>
+            
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+                <div style="flex: 2; min-width: 200px;">
+                    <label style="font-size: 13px; font-weight: bold; color: #2c3e50; display: block; margin-bottom: 5px;">Pilih Obat:</label>
+                    <select id="selectObatRetur" style="width: 100%; padding: 9px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box;"></select>
+                </div>
+                <div style="flex: 1; min-width: 120px;">
+                    <label style="font-size: 13px; font-weight: bold; color: #2c3e50; display: block; margin-bottom: 5px;">Jumlah:</label>
+                    <input type="number" id="jumlahRetur" value="1" min="1" style="width: 100%; padding: 9px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box;">
+                </div>
+                <div style="flex: 1.2; min-width: 140px;">
+                    <label style="font-size: 13px; font-weight: bold; color: #2c3e50; display: block; margin-bottom: 5px;">Kondisi Fisik:</label>
+                    <select id="kondisiObat" style="width: 100%; padding: 9px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box;">
+                        <option value="layak">Layak Jual (Masuk Stok)</option>
+                        <option value="rusak">Rusak / Expired (Buang)</option>
+                    </select>
+                </div>
+                <div style="flex: 1.2; min-width: 130px;">
+                    <label style="font-size: 13px; font-weight: bold; color: #2c3e50; display: block; margin-bottom: 5px;">No. Batch Asal:</label>
+                    <input type="text" id="batchRetur" placeholder="No. Batch" style="width: 100%; padding: 9px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box;">
+                </div>
+                <div style="flex: 1; min-width: 110px;">
+                    <button type="button" onclick="tambahItemKeranjangRetur()" style="background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; height: 38px;"><i class="fa-solid fa-plus"></i> Tambah</button>
+                </div>
+            </div>
+        </div>
+
+        <h4 style="color: #2c3e50; font-size: 16px; margin-bottom: 10px;">Draf Item Retur</h4>
+        <div style="overflow-x: auto;">
+            <table class="table-master" id="tabelDrafRetur" style="width: 100%; border-collapse: collapse; margin-top: 5px;">
+                <thead>
+                    <tr>
+                        <th style="padding: 10px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50;">Nama Obat</th>
+                        <th style="padding: 10px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50;">Jumlah</th>
+                        <th style="padding: 10px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50;">Kondisi</th>
+                        <th style="padding: 10px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50;">No. Batch</th>
+                        <th style="padding: 10px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="5" style="text-align: center; padding: 20px;">Belum ada item retur ditambahkan.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 20px; text-align: right;">
+            <button type="button" onclick="prosesSimpanRetur()" style="background: #e67e22; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer;"><i class="fa-solid fa-rotate-left"></i> Proses Retur Penjualan</button>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/retur.js"></script>

@@ -4,7 +4,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routers import laporan, obat, transaksi, user, pembelian, stok, supplier # <-- Tambahkan supplier di sini
+from backend.routers import laporan, obat, transaksi, user, pembelian, stok, supplier, retur
 from backend.database import engine, SessionLocal
 from backend.models import Base
 
@@ -67,6 +67,10 @@ def halaman_login():
 def halaman_stok_opname():
     return FileResponse("frontend/pages/stok_opname.html")
 
+@app.get("/pages/retur.html")
+def halaman_retur():
+    return FileResponse("frontend/pages/retur.html")
+
 # --- MIDDLEWARE & ROUTER BACKEND ---
 
 app.add_middleware(
@@ -83,7 +87,8 @@ app.include_router(transaksi.router)
 app.include_router(user.router)
 app.include_router(pembelian.router)
 app.include_router(stok.router)
-app.include_router(supplier.router) # <-- Daftarkan router supplier agar endpoint /suppliers aktif
+app.include_router(supplier.router)
+app.include_router(retur.router)
 
 @app.post("/upload-gambar")
 def upload_gambar(file: UploadFile = File(...)):

@@ -72,3 +72,16 @@ def buat_retur_penjualan(data: ReturPenjualanCreate):
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         db.close()
+        
+@router.get("/obat/{medicine_id}/batches")
+def get_batches_by_obat(medicine_id: int):
+    db = SessionLocal()
+    try:
+        from backend.models import InventoryBatch
+        batches = db.query(InventoryBatch).filter(
+            InventoryBatch.medicine_id == medicine_id,
+            InventoryBatch.jumlah_stok > 0
+        ).all()
+        return [{"nomor_batch": b.nomor_batch, "jumlah_stok": b.jumlah_stok, "tanggal_kedaluwarsa": str(b.tanggal_kedaluwarsa)} for b in batches]
+    finally:
+        db.close()

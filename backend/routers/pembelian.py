@@ -1,22 +1,35 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from datetime import datetime
+from sqlalchemy.orm import Session
 from backend.database import SessionLocal
 from backend.models import InventoryBatch, Medicine, Purchase, PurchaseItem, KartuStok
-from backend.schemas import PembelianRequest  # <-- Gunakan PembelianRequest di sini
+from backend.schemas import PembelianRequest  # Pastikan skema Pydantic sudah menyesuaikan field baru
 
 router = APIRouter(tags=["Pembelian"])
 
-@router.post("/pembelian", status_code=status.HTTP_201_CREATED)
-def tambah_pembelian_stok(data: PembelianRequest):  # <-- Ubah dari PembelianCreate ke PembelianRequest
+# Dependency helper session database jika diperlukan
+def get_db():
     db = SessionLocal()
     try:
-        total_semua = 0
+        yield db
+    finally:
+        db.close()
+
+@router.post("/pembelian", status_code=status.HTTP_201_CREATED)
+def tambah_pembelian_stok(data: PembelianRequest):
+    db = SessionLocal()
+    try:
+        subtotal_keseluruhan = 0
         
-        # 1. Buat header nota pembelian (faktur masuk)
+        # 1. Buat header nota pembelian (faktur masuk) dengan atribut lengkap baru
         purchase_baru = Purchase(
             supplier_id=data.supplier_id,
             nomor_faktur=data.nomor_faktur,
-            tanggal_pembelian=datetime.now(),
+            tanggal_faktur=data.tanggal_faktur,            # Tanggal fisik faktur
+            tanggal_jatuh_tempo=data.tanggal_jatuh_tempo,   # Tanggal jatuh tempo
+            tanggal_pembelian=datetime.now(),               # Waktu input sistem
+            diskon_nominal=data.diskon_nominal or 0,        # Diskon faktur (Rp)
+            termasuk_ppn=data.termasuk_ppn or False,        # Flag PPN 11%
             user_pembuat=data.user_pembuat
         )
         db.add(purchase_baru)
@@ -28,8 +41,8 @@ def tambah_pembelian_stok(data: PembelianRequest):  # <-- Ubah dari PembelianCre
             if not medicine:
                 raise HTTPException(status_code=404, detail=f"Obat dengan ID {item.medicine_id} tidak ditemukan di master data")
 
-            subtotal = item.jumlah * item.harga_beli_satuan
-            total_semua += subtotal
+            subtotal_item = item.jumlah * item.harga_beli_satuan
+            subtotal_keseluruhan += subtotal_item
 
             # 2. Simpan ke rincian item pembelian
             p_item = PurchaseItem(
@@ -39,7 +52,7 @@ def tambah_pembelian_stok(data: PembelianRequest):  # <-- Ubah dari PembelianCre
                 jumlah=item.jumlah,
                 harga_beli_satuan=item.harga_beli_satuan,
                 tanggal_kedaluwarsa=item.tanggal_kedaluwarsa,
-                subtotal=subtotal
+                subtotal=subtotal_item
             )
             db.add(p_item)
 
@@ -75,12 +88,20 @@ def tambah_pembelian_stok(data: PembelianRequest):  # <-- Ubah dari PembelianCre
             )
             db.add(kartu)
 
-        purchase_baru.total_pembayaran = total_semua
+        # 5. Hitung Grand Total (Subtotal - Diskon. Jika termasuk_ppn True, harga tetap karena sudah include. Jika False, ditambah PPN 11%)
+        setelah_diskon = max(0, subtotal_keseluruhan - (data.diskon_nominal or 0))
+        if data.termasuk_ppn:
+            grand_total = setelah_diskon
+        else:
+            grand_total = setelah_diskon * 1.11
+
+        purchase_baru.total_pembayaran = round(grand_total)
         db.commit()
         
         return {
             "message": "Pembelian berhasil disimpan dan stok batch otomatis bertambah!", 
-            "purchase_id": purchase_baru.id
+            "purchase_id": purchase_baru.id,
+            "total_pembayaran": purchase_baru.total_pembayaran
         }
         
     except Exception as e:
@@ -88,3 +109,51 @@ def tambah_pembelian_stok(data: PembelianRequest):  # <-- Ubah dari PembelianCre
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         db.close()
+
+@router.get("/pembelian")
+def get_daftar_pembelian(db: Session = Depends(get_db)):
+    purchases = db.query(Purchase).all()
+    result = []
+    for p in purchases:
+        nama_sup = p.supplier.nama_supplier if p.supplier else "Supplier Tidak Diketahui"
+        result.append({
+            "id": p.id,
+            "nomor_faktur": p.nomor_faktur,
+            "nama_supplier": nama_sup,
+            "tanggal_faktur": str(p.tanggal_faktur) if p.tanggal_faktur else "-",
+            "tanggal_jatuh_tempo": str(p.tanggal_jatuh_tempo) if p.tanggal_jatuh_tempo else "-",
+            "total_pembayaran": p.total_pembayaran or 0
+        })
+    return result
+
+@router.get("/pembelian/{pembelian_id}")
+def get_detail_pembelian(pembelian_id: int, db: Session = Depends(get_db)):
+    purchase = db.query(Purchase).filter(Purchase.id == pembelian_id).first()
+    if not purchase:
+        raise HTTPException(status_code=404, detail="Faktur pembelian tidak ditemukan")
+    
+    items_result = []
+    for item in purchase.items:
+        nama_obat = item.medicine.nama if item.medicine else "Obat Tidak Dikenal"
+        items_result.append({
+            "id": item.id,
+            "nama_obat": nama_obat,
+            "nomor_batch": item.nomor_batch,
+            "jumlah": item.jumlah,
+            "harga_beli_satuan": item.harga_beli_satuan,
+            "tanggal_kedaluwarsa": str(item.tanggal_kedaluwarsa) if item.tanggal_kedaluwarsa else "-",
+            "subtotal": item.subtotal
+        })
+
+    return {
+        "id": purchase.id,
+        "nomor_faktur": purchase.nomor_faktur,
+        "nama_supplier": purchase.supplier.nama_supplier if purchase.supplier else "-",
+        "tanggal_faktur": str(purchase.tanggal_faktur) if purchase.tanggal_faktur else "-",
+        "tanggal_jatuh_tempo": str(purchase.tanggal_jatuh_tempo) if purchase.tanggal_jatuh_tempo else "-",
+        "tanggal_pembelian": str(purchase.tanggal_pembelian) if purchase.tanggal_pembelian else "-",
+        "diskon_nominal": purchase.diskon_nominal or 0,
+        "termasuk_ppn": purchase.termasuk_ppn or False,
+        "total_pembayaran": purchase.total_pembayaran or 0,
+        "items": items_result
+    }

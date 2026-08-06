@@ -48,9 +48,70 @@ function filterDaftarFaktur() {
     renderTabelFaktur(filtered);
 }
 
-window.detailFaktur = function(id) {
-    // Bisa diarahkan ke modal detail atau halaman detail item obat dalam faktur tersebut
-    alert("Fitur detail item untuk faktur ID: " + id);
+// Fungsi membuka modal detail rincian item faktur gaya nota profesional
+window.detailFaktur = async function(id) {
+    try {
+        const res = await fetch(`${window.API_URL}/pembelian/${id}`);
+        const data = await res.json();
+        
+        if (!res.ok) {
+            alert("Gagal memuat rincian faktur.");
+            return;
+        }
+
+        // Isi data ke elemen modal nota
+        document.getElementById('modalNoFakturText').innerText = data.nomor_faktur || '-';
+        document.getElementById('modalNamaSupplier').innerText = `Supplier: ${data.nama_supplier || '-'}`;
+        document.getElementById('modalTglFakturText').innerText = data.tanggal_faktur || '-';
+        document.getElementById('modalTglJatuhTempoText').innerText = data.tanggal_jatuh_tempo || '-';
+        document.getElementById('modalTglInputText').innerText = data.tanggal_pembelian || '-';
+        
+        const tbody = document.querySelector('#tabelItemFakturDetail tbody');
+        tbody.innerHTML = '';
+
+        let subtotalKeseluruhan = 0;
+
+        if (!data.items || data.items.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 15px;">Tidak ada item dalam faktur ini.</td></tr>';
+        } else {
+            data.items.forEach((item, index) => {
+                subtotalKeseluruhan += item.subtotal;
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="padding: 6px 10px; border: 1px solid #ddd; text-align: center;">${index + 1}</td>
+                        <td style="padding: 6px 10px; border: 1px solid #ddd;"><strong>${item.nama_obat}</strong></td>
+                        <td style="padding: 6px 10px; border: 1px solid #ddd;">${item.nomor_batch || '-'}</td>
+                        <td style="padding: 6px 10px; border: 1px solid #ddd; text-align: center;">${item.tanggal_kedaluwarsa || '-'}</td>
+                        <td style="padding: 6px 10px; border: 1px solid #ddd; text-align: center;">${item.jumlah}</td>
+                        <td style="padding: 6px 10px; border: 1px solid #ddd; text-align: right;">Rp ${item.harga_beli_satuan.toLocaleString('id-ID')}</td>
+                        <td style="padding: 6px 10px; border: 1px solid #ddd; text-align: right; font-weight: bold;">Rp ${item.subtotal.toLocaleString('id-ID')}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        let diskonFaktur = data.diskon_nominal || 0;
+        let setelahDiskon = Math.max(0, subtotalKeseluruhan - diskonFaktur);
+        
+        // Logika PPN: Jika termasuk_ppn True, PPN = 0 (karena sudah di dalam harga). 
+        // Jika False, PPN = 11% dari setelahDiskon.
+        let nilaiPpn = data.termasuk_ppn ? 0 : setelahDiskon * 0.11;
+        let grandTotal = data.total_pembayaran || (setelahDiskon + nilaiPpn);
+
+        document.getElementById('summaryTotalHarga').innerText = `Rp ${subtotalKeseluruhan.toLocaleString('id-ID')}`;
+        document.getElementById('summaryDiskon').innerText = `Rp ${diskonFaktur.toLocaleString('id-ID')}`;
+        document.getElementById('summaryPpn').innerText = `Rp ${Math.round(nilaiPpn).toLocaleString('id-ID')}`;
+        document.getElementById('summaryNilaiAkhir').innerText = `Rp ${Math.round(grandTotal).toLocaleString('id-ID')}`;
+
+        document.getElementById('modalDetailFaktur').style.display = 'flex';
+    } catch (e) {
+        console.error(e);
+        alert("Terjadi kesalahan saat mengambil data detail.");
+    }
+};
+
+window.tutupModalDetailFaktur = function() {
+    document.getElementById('modalDetailFaktur').style.display = 'none';
 };
 
 muatDaftarFaktur();

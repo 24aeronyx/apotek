@@ -152,14 +152,17 @@ window.hapusItemBeli = function(index) {
     renderDrafPembelian();
 };
 
-// Fungsi menghitung total termasuk diskon dan PPN (Opsional untuk preview dinamis jika diperlukan)
+// Fungsi menghitung total termasuk diskon dan PPN (diperbaiki dari typo sebelumnya)
 window.hitungGrandTotalFaktur = function() {
     let subtotalTotal = keranjangBeli.reduce((sum, item) => sum + item.subtotal, 0);
     let diskon = parseFloat(document.getElementById('diskonFaktur').value) || 0;
     let setelahDiskon = Math.max(0, subtotalTotal - diskon);
     
-    let isPpn = document.getElementById('checkPpn').checked;
-    let grandTotal = isPpn ? setelhaDiskon * 1.11 : setelhaDiskon;
+    // Jika checkbox DICENTANG ("Harga Sudah Termasuk PPN"), maka harga sudah final (tidak ditambah 11%)
+    // Jika TIDAK DICENTANG, maka ditambah PPN 11%
+    let isSudahTermasukPpn = document.getElementById('checkPpn').checked;
+    let grandTotal = isSudahTermasukPpn ? setelahDiskon : setelahDiskon * 1.11;
+    
     return grandTotal;
 };
 

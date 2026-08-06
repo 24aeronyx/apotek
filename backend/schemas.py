@@ -48,6 +48,10 @@ class ItemBeliSchema(BaseModel):
 class PembelianRequest(BaseModel):
     supplier_id: int
     nomor_faktur: str
+    tanggal_faktur: date
+    tanggal_jatuh_tempo: Optional[date] = None
+    diskon_nominal: Optional[float] = 0.0
+    termasuk_ppn: Optional[bool] = False
     user_pembuat: str
     items: List[ItemBeliSchema]
 

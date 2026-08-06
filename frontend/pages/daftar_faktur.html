@@ -26,4 +26,80 @@
     </div>
 </div>
 
+<!-- Modal Detail Faktur Style Nota Profesional -->
+<div id="modalDetailFaktur" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; font-family: Arial, sans-serif;">
+    <div style="background: #fff; padding: 25px; border-radius: 8px; width: 92%; max-width: 850px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto;">
+        
+        <!-- Header Nota -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #333; padding-bottom: 12px; margin-bottom: 15px;">
+            <div>
+                <h2 style="margin: 0; color: #2c3e50; font-size: 20px;">FAKTUR PEMBELIAN / PENERIMAAN</h2>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: #555;" id="modalNamaSupplier">-</p>
+            </div>
+            <div style="text-align: right;">
+                <button onclick="tutupModalDetailFaktur()" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;"><i class="fa-solid fa-xmark"></i> Tutup</button>
+            </div>
+        </div>
+
+        <!-- Informasi Nota & Jatuh Tempo -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f8f9fa; padding: 12px 15px; border-radius: 6px; font-size: 13px; margin-bottom: 15px; border: 1px solid #e2e8f0;">
+            <div>
+                <div style="margin-bottom: 4px;"><strong>No. Faktur:</strong> <span id="modalNoFakturText">-</span></div>
+                <div><strong>Dibuat / Input:</strong> <span id="modalTglInputText">-</span></div>
+            </div>
+            <div style="text-align: right;">
+                <div style="margin-bottom: 4px;"><strong>Tanggal Faktur (Fisik):</strong> <span id="modalTglFakturText">-</span></div>
+                <div><strong>Jatuh Tempo:</strong> <span id="modalTglJatuhTempoText" style="color: #c0392b; font-weight: bold;">-</span></div>
+            </div>
+        </div>
+
+        <!-- Tabel Item Obat -->
+        <div style="overflow-x: auto; margin-bottom: 15px;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;" id="tabelItemFakturDetail">
+                <thead>
+                    <tr style="background: #2c3e50; color: white;">
+                        <th style="padding: 8px 10px; border: 1px solid #ddd;">No.</th>
+                        <th style="padding: 8px 10px; border: 1px solid #ddd;">Uraian / Nama Obat</th>
+                        <th style="padding: 8px 10px; border: 1px solid #ddd;">No. Batch</th>
+                        <th style="padding: 8px 10px; border: 1px solid #ddd; text-align: center;">E.D</th>
+                        <th style="padding: 8px 10px; border: 1px solid #ddd; text-align: center;">Kwantum</th>
+                        <th style="padding: 8px 10px; border: 1px solid #ddd; text-align: right;">Harga @</th>
+                        <th style="padding: 8px 10px; border: 1px solid #ddd; text-align: right;">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Diisi dinamis via JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bagian Ringkasan Total -->
+        <div style="display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: flex-start; border-top: 1px solid #ddd; padding-top: 12px;">
+            <div style="font-size: 12px; color: #555;">
+                <p style="margin: 0 0 5px 0;"><em>Catatan: Pastikan kesesuaian fisik barang dengan data batch dan tanggal kedaluwarsa di atas.</em></p>
+            </div>
+            <div style="font-size: 13px; background: #fdfefe; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>Total Harga:</span>
+                    <strong id="summaryTotalHarga">Rp 0</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>Diskon:</span>
+                    <strong id="summaryDiskon">Rp 0</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>PPN (11%):</span>
+                    <strong id="summaryPpn">Rp 0</strong>
+                </div>
+                <hr style="border: none; border-top: 1px solid #cbd5e1; margin: 8px 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 15px; color: #27ae60;">
+                    <strong>NILAI AKHIR:</strong>
+                    <strong id="summaryNilaiAkhir">Rp 0</strong>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
 <script src="/static/js/daftar_faktur.js"></script>

@@ -186,9 +186,18 @@
 </div>
 
 <!-- Skrip Pengaturan Sidebar & Muat Halaman Dinamis -->
+<!-- Skrip Pengaturan Sidebar & Muat Halaman Dinamis -->
 <script>
+    let currentUrl = ''; // Menyimpan URL halaman yang sedang aktif
+
     // Fungsi untuk memuat file HTML ke dalam content-area secara dinamis
     async function muatHalaman(url, element) {
+        // Jika pengguna mengklik menu halaman yang sedang aktif, abaikan agar tidak reload berulang
+        if (currentUrl === url) {
+            return;
+        }
+        currentUrl = url;
+
         try {
             const response = await fetch(url);
             if (!response.ok) throw new Error("Gagal memuat halaman.");
@@ -197,6 +206,8 @@
             // Masukkan isi HTML ke area konten
             const contentArea = document.getElementById('contentArea');
             contentArea.innerHTML = html;
+
+            // Bersihkan script lama yang melekat khusus halaman dinamis sebelumnya
             Array.from(document.querySelectorAll('script')).forEach(script => {
                 if (script.src && script.src.includes('/static/js/')) {
                     script.remove();
@@ -206,11 +217,21 @@
 
             // Update status aktif pada menu sidebar
             document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
-            if (element) element.classList.add('active');
+            if (element) {
+                element.classList.add('active');
+            } else {
+                // Jika dipanggil otomatis tanpa elemen (seperti saat pertama load), tandai menu yang sesuai
+                document.querySelectorAll('.sidebar-menu a').forEach(a => {
+                    if (a.getAttribute('onclick') && a.getAttribute('onclick').includes(url)) {
+                        a.classList.add('active');
+                    }
+                });
+            }
 
-            // Eksekusi ulang script yang ada di dalam file yang dimuat (jika ada)
+            // Eksekusi ulang script yang ada di dalam file yang dimuat
             await evaluatScriptDinamis(url);
         } catch (error) {
+            currentUrl = ''; // Reset jika gagal agar bisa diklik ulang
             console.error(error);
             document.getElementById('contentArea').innerHTML = `<div style="text-align:center; padding: 40px; color: #e74c3c;"><h3>Gagal Memuat Halaman</h3><p>${error.message}</p></div>`;
         }
@@ -221,6 +242,7 @@
             window.__loadedScripts = new Set();
         }
 
+        // Jika script sudah pernah di-load sebelumnya, cukup eksekusi ulang fungsi inisialisasinya tanpa hapus-pasang script tag
         if (window.__loadedScripts.has(src)) {
             return;
         }
@@ -228,11 +250,6 @@
         window.__loadedScripts.add(src);
 
         try {
-            const existing = document.querySelector(`script[src="${src}"]`);
-            if (existing) {
-                existing.remove();
-            }
-
             const response = await fetch(src);
             const code = await response.text();
             const newScript = document.createElement('script');
@@ -264,28 +281,22 @@
             scriptsToLoad.push('/static/js/struk.js');
             scriptsToLoad.push('/static/app.js');
         }
-        // Catatan: Jika kode supplier.html menggunakan script inline, tidak perlu dimasukkan ke array scriptToLoad
 
         for (const src of scriptsToLoad) {
             await loadScript(src);
         }
 
+        // Panggil fungsi inisialisasi halaman setelah script siap
         if (url.includes('/pages/master_obat.html')) {
-            if (typeof window.muatMasterObat === 'function') {
-                window.muatMasterObat();
-            }
+            if (typeof window.muatMasterObat === 'function') window.muatMasterObat();
         } else if (url.includes('/pages/supplier.html')) {
             if (typeof window.muatSupplier === 'function') window.muatSupplier();
         } else if (url.includes('/pages/pembelian.html')) {
             if (typeof window.muatDropdownObat === 'function') window.muatDropdownObat();
-        } else if (url.includes('/pages/pembelian.html')) {
-            if (typeof window.muatDropdownObat === 'function') {
-                window.muatDropdownObat();
-            }
+        } else if (url.includes('/pages/daftar_faktur.html')) {
+            if (typeof window.muatDaftarFaktur === 'function') window.muatDaftarFaktur();
         } else if (url.includes('/pages/stok_opname.html')) {
-            if (typeof window.loadBatches === 'function') {
-                window.loadBatches();
-            }
+            if (typeof window.loadBatches === 'function') window.loadBatches();
         } else if (url.includes('/pages/dashboard.html')) {
             if (typeof window.initDashboard === 'function') {
                 window.initDashboard();
@@ -293,18 +304,14 @@
                 window.muatDashboard();
             }
         } else if (url.includes('/pages/kasir.html')) {
-            if (typeof window.initKasir === 'function') {
-                window.initKasir();
-            }
+            if (typeof window.initKasir === 'function') window.initKasir();
         } else if (url.includes('/pages/retur.html')) {
             if (typeof window.muatDropdownObatRetur === 'function') window.muatDropdownObatRetur();
         }
-        
     }
 
     // Muat halaman kasir secara default saat index dibuka
     window.addEventListener('DOMContentLoaded', () => {
-        // Cek apakah user sudah login
         const user = localStorage.getItem('user_apotek');
         if (!user) {
             window.location.href = '/pages/login.html';
@@ -312,7 +319,6 @@
         }
         document.getElementById('userInfo').innerHTML = `<i class="fa-solid fa-user-circle"></i> ${user}`;
 
-        // Load halaman kasir pertama kali (pastikan Anda membuat file pages/kasir.html dari isi index lama)
         muatHalaman('/pages/kasir.html');
     });
 </script>

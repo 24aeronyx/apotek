@@ -143,18 +143,17 @@
         background: #ffffff;
         border-left: 5px solid #e74c3c;
         border-radius: 8px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
         padding: 15px;
-        width: 320px;
+        width: 340px;
         z-index: 9999;
         font-size: 13px;
-        display: none; /* Muncul otomatis jika ada peringatan */
-        transition: all 0.3s ease;
-      }
-      .floating-notification-box.active {
+        display: none;
+    }
+    .floating-notification-box.active {
         display: block;
-      }
-      .floating-header {
+    }
+    .floating-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -163,26 +162,26 @@
         margin-bottom: 8px;
         border-bottom: 1px solid #ecf0f1;
         padding-bottom: 5px;
-      }
-      .floating-content p {
-        margin: 4px 0;
-        color: #555;
-      }
-      .btn-close-float {
-        background: none;
-        border: none;
-        font-size: 16px;
-        cursor: pointer;
-        color: #95a5a6;
-      }
-      .badge-alert-count {
+    }
+    .badge-alert-count {
         background: #e74c3c;
         color: white;
         border-radius: 50%;
         padding: 2px 6px;
         font-size: 11px;
         font-weight: bold;
-      }
+    }
+    .btn-detail-alert {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 4px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 11px;
+        margin-top: 8px;
+    }
     </style>
   </head>
   <body>
@@ -328,30 +327,36 @@
         <!-- Default memuat halaman kasir saat pertama dibuka -->
       </div>
 
-      <div id="floatingAlertBox" class="floating-notification-box">
+        <!-- Floating Widget HTML -->
+    <div id="floatingAlertBox" class="floating-notification-box">
         <div class="floating-header">
-          <span
-            ><i
-              class="fa-solid fa-triangle-exclamation"
-              style="color: #e74c3c"
-            ></i>
-            Peringatan Sistem
-            <span id="alertCountBadge" class="badge-alert-count">0</span></span
-          >
-          <button class="btn-close-float" onclick="tutupFloatingAlert()">
-            &times;
-          </button>
+            <span><i class="fa-solid fa-triangle-exclamation" style="color: #e74c3c;"></i> Peringatan Sistem <span id="alertCountBadge" class="badge-alert-count">0</span></span>
+            <button style="background:none; border:none; font-size:16px; cursor:pointer; color:#95a5a6;" onclick="tutupFloatingAlert()">&times;</button>
         </div>
         <div class="floating-content" id="floatingAlertText">
-          Memuat peringatan...
+            Memuat peringatan...
         </div>
-      </div>
+        <button class="btn-detail-alert" onclick="bukaModalDetailAlert()">Lihat Rincian Obat</button>
     </div>
 
-    <!-- Skrip Pengaturan Sidebar & Muat Halaman Dinamis -->
+    <div id="modalDetailAlert" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000;">
+        <div style="background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+                <h3 style="margin: 0; color: #2c3e50;"><i class="fa-solid fa-circle-exclamation" style="color: #e74c3c;"></i> Rincian Stok Menipis & Expired</h3>
+                <button onclick="tutupModalDetailAlert()" style="background: none; border: none; font-size: 22px; cursor: pointer; color: #7f8c8d;">&times;</button>
+            </div>
+            <div id="kontenRincianAlert">
+                <!-- Data obat rinci akan dimuat di sini -->
+            </div>
+            <div style="text-align: right; margin-top: 20px;">
+                <button onclick="tutupModalDetailAlert()" style="background: #3498db; color: white; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-weight: bold;">Tutup</button>
+            </div>
+        </div>
+    </div>
     <!-- Skrip Pengaturan Sidebar & Muat Halaman Dinamis -->
     <script>
-      let currentUrl = ""; // Menyimpan URL halaman yang sedang aktif
+      let currentUrl = "";
+      let globalDataAlert = null;
 
       // Fungsi untuk memuat file HTML ke dalam content-area secara dinamis
       async function muatHalaman(url, element) {
@@ -495,48 +500,71 @@
 
       async function cekPeringatanGlobal() {
         try {
-          const response = await fetch(
-            `${window.location.origin}/stok/peringatan/stok-expired`,
-          );
-          if (!response.ok) return;
+            const response = await fetch(`${window.location.origin}/stok/peringatan/stok-expired`);
+            if (!response.ok) return;
+            
+            globalDataAlert = await response.json();
+            const totalMenipis = globalDataAlert.stok_menipis ? globalDataAlert.stok_menipis.length : 0;
+            const totalExpired = globalDataAlert.batch_expired ? globalDataAlert.batch_expired.length : 0;
+            const totalKritis = totalMenipis + totalExpired;
 
-          const data = await response.json();
-          const totalMenipis = data.stok_menipis ? data.stok_menipis.length : 0;
-          const totalExpired = data.batch_expired
-            ? data.batch_expired.length
-            : 0;
-          const totalKritis = totalMenipis + totalExpired;
+            const alertBox = document.getElementById('floatingAlertBox');
+            const alertText = document.getElementById('floatingAlertText');
+            const alertBadge = document.getElementById('alertCountBadge');
 
-          const alertBox = document.getElementById("floatingAlertBox");
-          const alertText = document.getElementById("floatingAlertText");
-          const alertBadge = document.getElementById("alertCountBadge");
-
-          if (totalKritis > 0) {
-            alertBadge.innerText = totalKritis;
-            let htmlContent = "";
-
-            if (totalMenipis > 0) {
-              htmlContent += `<p><i class="fa-solid fa-box-open" style="color: #e67e22;"></i> <b>${totalMenipis}</b> obat stoknya menipis.</p>`;
+            if (totalKritis > 0) {
+                alertBadge.innerText = totalKritis;
+                alertText.innerHTML = `
+                    <p><i class="fa-solid fa-box-open" style="color: #e67e22;"></i> <b>${totalMenipis}</b> obat stok menipis.</p>
+                    <p><i class="fa-regular fa-calendar-xmark" style="color: #c0392b;"></i> <b>${totalExpired}</b> batch mendekati/lewat expired.</p>
+                `;
+                alertBox.classList.add('active');
+            } else {
+                alertBox.classList.remove('active');
             }
-            if (totalExpired > 0) {
-              htmlContent += `<p><i class="fa-regular fa-calendar-xmark" style="color: #c0392b;"></i> <b>${totalExpired}</b> batch mendekati/lewat expired.</p>`;
-            }
-            htmlContent += `<small style="color: #7f8c8d; display:block; margin-top:5px;">*Obat non-aktif otomatis diabaikan.</small>`;
-
-            alertText.innerHTML = htmlContent;
-            alertBox.classList.add("active"); // Munculkan kotak mengapung di pojok kanan bawah
-          } else {
-            alertBox.classList.remove("active"); // Sembunyikan jika aman
-          }
         } catch (error) {
-          console.error("Gagal memuat peringatan global:", error);
+            console.error("Gagal memuat peringatan global:", error);
         }
-      }
+    }
+    
+function bukaModalDetailAlert() {
+    if (!globalDataAlert) return;
+    
+    let html = `<h4>🔴 Stok Menipis (Aktif)</h4>`;
+    if (globalDataAlert.stok_menipis.length === 0) {
+        html += `<p style="color: #27ae60;">Aman, tidak ada stok menipis.</p>`;
+    } else {
+        html += `<table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:13px;">
+            <tr style="background:#f8f9fa;"><th style="padding:8px; border:1px solid #ddd;">Nama Obat</th><th style="padding:8px; border:1px solid #ddd;">Kategori</th><th style="padding:8px; border:1px solid #ddd;">Sisa Stok</th></tr>`;
+        globalDataAlert.stok_menipis.forEach(o => {
+            html += `<tr><td style="padding:8px; border:1px solid #ddd;"><b>${o.nama}</b></td><td style="padding:8px; border:1px solid #ddd;">${o.kategori}</td><td style="padding:8px; border:1px solid #ddd; color:red; font-weight:bold;">${o.total_stok} (Min: ${o.stok_minimum})</td></tr>`;
+        });
+        html += `</table>`;
+    }
 
-      function tutupFloatingAlert() {
-        document.getElementById("floatingAlertBox").classList.remove("active");
-      }
-      // Muat halaman kasir secara default saat index dibuka
+    html += `<h4>⚠️ Batch Mendekati / Lewat Kedaluwarsa</h4>`;
+    if (globalDataAlert.batch_expired.length === 0) {
+        html += `<p style="color: #27ae60;">Aman, tidak ada batch mendekati expired.</p>`;
+    } else {
+        html += `<table style="width:100%; border-collapse:collapse; font-size:13px;">
+            <tr style="background:#f8f9fa;"><th style="padding:8px; border:1px solid #ddd;">Nama Obat</th><th style="padding:8px; border:1px solid #ddd;">No. Batch</th><th style="padding:8px; border:1px solid #ddd;">Stok</th><th style="padding:8px; border:1px solid #ddd;">Tgl Expired</th></tr>`;
+        globalDataAlert.batch_expired.forEach(b => {
+            html += `<tr><td style="padding:8px; border:1px solid #ddd;"><b>${b.nama_obat}</b></td><td style="padding:8px; border:1px solid #ddd;">#${b.nomor_batch}</td><td style="padding:8px; border:1px solid #ddd;">${b.jumlah_stok}</td><td style="padding:8px; border:1px solid #ddd; color:#c0392b; font-weight:bold;">${b.tanggal_kedaluwarsa}</td></tr>`;
+        });
+        html += `</table>`;
+    }
+
+    document.getElementById('kontenRincianAlert').innerHTML = html;
+    document.getElementById('modalDetailAlert').style.display = 'flex';
+}
+
+function tutupModalDetailAlert() {
+    document.getElementById('modalDetailAlert').style.display = 'none';
+}
+
+function tutupFloatingAlert() {
+    document.getElementById('floatingAlertBox').classList.remove('active');
+}
       window.addEventListener("DOMContentLoaded", () => {
         const user = localStorage.getItem("user_apotek");
         if (!user) {

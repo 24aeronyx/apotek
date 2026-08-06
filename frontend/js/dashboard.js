@@ -54,8 +54,9 @@ async function muatDashboard() {
             document.getElementById('statTotalLaba').innerText = 'Rp 0';
             renderGrafikOmzet([], []);
             
-            if (typeof window.renderGlobalTable === 'function') {
-                window.renderGlobalTable('#wrapperTabelLaporan', [], [], `Belum ada transaksi pada periode ${namaBulanList[bulanAktif - 1]} ${tahunAktif}.`);
+            const tbodyLaporan = document.querySelector('#tabelLaporan tbody');
+            if (tbodyLaporan) {
+                tbodyLaporan.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: #7f8c8d;">Belum ada transaksi pada periode ${namaBulanList[bulanAktif - 1]} ${tahunAktif}.</td></tr>`;
             }
             return;
         }
@@ -85,22 +86,23 @@ async function muatDashboard() {
         document.getElementById('statTotalOmzet').innerText = 'Rp ' + totalOmzet.toLocaleString('id-ID');
         document.getElementById('statTotalLaba').innerText = 'Rp ' + totalLabaBersih.toLocaleString('id-ID');
 
-        // Definisi kolom untuk komponen tabel global
-        const kolomLaporan = [
-            { label: 'ID Nota', key: 'id_nota', render: row => `<strong>#${row.id_nota}</strong>` },
-            { label: 'Kasir', key: 'kasir' },
-            { label: 'Waktu Transaksi', key: 'waktu' },
-            { label: 'Jumlah Item', key: 'total_item', render: row => `${row.total_item} Item` },
-            { label: 'Grand Total', key: 'grand_total', align: 'right', render: row => `Rp ${(row.grand_total || 0).toLocaleString('id-ID')}` },
-            { label: 'Perkiraan Laba', key: 'total_laba', align: 'right', render: row => {
-                let laba = row.total_laba ?? row.perkiraan_laba ?? row.estimasi_laba ?? 0;
-                return `<span style="color: #27ae60; font-weight: bold;">Rp ${laba.toLocaleString('id-ID')}</span>`;
-            }}
-        ];
-
-        // Render tabel menggunakan komponen global
-        if (typeof window.renderGlobalTable === 'function') {
-            window.renderGlobalTable('#wrapperTabelLaporan', kolomLaporan, dataBulanIni, "Tidak ada data riwayat penjualan.");
+        // Render langsung ke tabel HTML riwayat laporan
+        const tbodyLaporan = document.querySelector('#tabelLaporan tbody');
+        if (tbodyLaporan) {
+            tbodyLaporan.innerHTML = '';
+            dataBulanIni.forEach(row => {
+                let labaRow = row.total_laba ?? row.perkiraan_laba ?? row.estimasi_laba ?? 0;
+                tbodyLaporan.innerHTML += `
+                    <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;"><strong>#${row.id_nota}</strong></td>
+                        <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${row.kasir || '-'}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${row.waktu || '-'}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${row.total_item} Item</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: right;">Rp ${(row.grand_total || 0).toLocaleString('id-ID')}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: right; color: #27ae60; font-weight: bold;">Rp ${labaRow.toLocaleString('id-ID')}</td>
+                    </tr>
+                `;
+            });
         }
 
         let sortedDates = Object.keys(groupedDataPerHari).sort((a, b) => new Date(a) - new Date(b));
@@ -112,9 +114,9 @@ async function muatDashboard() {
 
     } catch (error) {
         console.error("Gagal memuat dashboard:", error);
-        const container = document.querySelector('#wrapperTabelLaporan');
-        if (container) {
-            container.innerHTML = '<div style="text-align: center; color: red; padding: 20px;">Gagal terhubung ke server backend.</div>';
+        const tbodyLaporan = document.querySelector('#tabelLaporan tbody');
+        if (tbodyLaporan) {
+            tbodyLaporan.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red; padding: 20px;">Gagal terhubung ke server backend.</td></tr>';
         }
     }
 }
@@ -149,8 +151,7 @@ function renderGrafikOmzet(labels, dataOmzet) {
 }
 
 function exportKeExcel() {
-    const wrapper = document.getElementById('wrapperTabelLaporan');
-    const tableEl = wrapper ? wrapper.querySelector('table') : null;
+    const tableEl = document.getElementById('tabelLaporan');
     if (!tableEl) {
         tampilkanAlert("Informasi Ekspor", "Data tabel belum siap untuk diexport ke Excel.");
         return;
@@ -202,11 +203,11 @@ function exportKePDF() {
     doc.text(`Periode Laporan : ${bulanPilih} ${tahunPilih}`, 14, 48);
     doc.text(`Waktu Cetak       : ${new Date().toLocaleString('id-ID')}`, 14, 54);
 
-    // --- 3. AMBIL DATA DARI TABEL HTML KOMPONEN ---
+    // --- 3. AMBIL DATA DARI TABEL HTML ---
     const headers = [["ID Nota", "Kasir", "Waktu Transaksi", "Jumlah Item", "Grand Total", "Perkiraan Laba"]];
     const data = [];
 
-    const rows = document.querySelectorAll("#wrapperTabelLaporan table tbody tr");
+    const rows = document.querySelectorAll("#tabelLaporan tbody tr");
     rows.forEach(row => {
         const cols = row.querySelectorAll("td");
         if (cols.length >= 6) {
@@ -221,7 +222,7 @@ function exportKePDF() {
         }
     });
 
-    if (data.length === 0 || (data.length === 1 && data[0][0].includes("Tidak ada"))) {
+    if (data.length === 0 || (data.length === 1 && data[0][0].includes("Belum ada"))) {
         tampilkanAlert("Informasi Ekspor", "Tidak ada data riwayat penjualan pada periode ini untuk diexport ke PDF.");
         return;
     }

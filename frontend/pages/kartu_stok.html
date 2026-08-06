@@ -1,24 +1,27 @@
-<div class="page-container">
-    <div class="content-card-section">
+<div style="max-width: 1200px; margin: auto; padding: 20px;">
+    <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1; margin-bottom: 20px;">
         
-        <div class="section-header-flex">
-            <h3 class="section-title-custom"><i class="fa-solid fa-clock-rotate-left"></i> Kartu Stok & Riwayat Mutasi Obat</h3>
+        <!-- Header dengan Flexbox agar Judul di Kiri dan Filter di Kanan Sejajar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+            <h3 style="margin: 0; color: #2c3e50; font-size: 18px;"><i class="fa-solid fa-clock-rotate-left"></i> Kartu Stok & Riwayat Mutasi Obat</h3>
             
             <!-- Filter Pilih Obat & Tanggal -->
-            <div class="filter-group-flex">
-                <div class="search-input-wrapper">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="position: relative; width: 280px;">
                     <input type="hidden" id="selectedObatKartuId">
-                    <input type="text" id="inputCariObatKartu" class="form-input-custom" onkeyup="filterDropdownObatKartu()" placeholder="Ketik nama obat untuk kartu stok...">
+                    <input type="text" id="inputCariObatKartu" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box;" onkeyup="filterDropdownObatKartu()" placeholder="Ketik nama obat untuk kartu stok...">
                     
-                    <div id="dropdownHasilObatKartu" class="dropdown-autocomplete"></div>
+                    <!-- Dropdown yang melayang rapi dengan shadow -->
+                    <div id="dropdownHasilObatKartu" style="display: none; position: absolute; top: calc(100% + 5px); left: 0; right: 0; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; max-height: 250px; overflow-y: auto; z-index: 9999; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);"></div>
                 </div>
 
-                <input type="date" id="filterTanggal" class="form-input-custom" onchange="muatDataKartuStok()" style="width: auto; padding: 7px 12px;">
+                <input type="date" id="filterTanggal" style="width: auto; padding: 7px 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box;" onchange="muatDataKartuStok()">
             </div>
         </div>
 
         <div style="overflow-x: auto;">
-            <table id="tabelKartuStok" class="table-kartu-stok">
+            <!-- Murni menggunakan tag table biasa, patuh pada style.css global, dan WAJIB ada ID untuk Javascript -->
+            <table id="tabelKartuStok">
                 <thead>
                     <tr>
                         <th>Waktu / Tanggal</th>

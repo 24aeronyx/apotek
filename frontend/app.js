@@ -3,18 +3,15 @@ window.API_URL = window.API_URL || window.location.origin || "http://127.0.0.1:8
 if (!localStorage.getItem("user_apotek")) {
   window.location.href = "login.html";
 }
-
-let keranjang = [];
+let keranjang = JSON.parse(localStorage.getItem("keranjang_apotek")) || [];
 let daftarObatMaster = [];
+window.selisihKembalian = 0;
 
 async function muatDaftarObat() {
   try {
-    // Diubah menyesuaikan endpoint get_all_medicines /obat yang baru
     const response = await fetch(`${window.API_URL}/obat`);
     const dataBackend = await response.json();
     
-    // Mapping agar properti backend (harga_jual & total_stok) 
-    // tetap cocok dengan fungsi renderGrid frontend yang memakai (harga & stok)
     daftarObatMaster = dataBackend.map(item => ({
       id: item.id,
       nama: item.nama,
@@ -28,32 +25,30 @@ async function muatDaftarObat() {
   } catch (error) {
     console.error("Gagal terhubung ke API:", error);
     document.getElementById("productGrid").innerHTML =
-      "<p>Gagal memuat data dari server.</p>";
+      "<p style='text-align:center; grid-column: 1/-1; color: red;'>Gagal memuat data dari server.</p>";
   }
+}
+
+function simpanKeranjang() {
+  localStorage.setItem("keranjang_apotek", JSON.stringify(keranjang));
 }
 
 function renderGrid(data) {
     const grid = document.getElementById("productGrid");
     grid.innerHTML = "";
 
-    // Handle jika data produk kosong / belum ada sama sekali
     if (!Array.isArray(data) || data.length === 0) {
         grid.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: white; border-radius: 12px; border: 1px solid #ecf0f1;">
-                <i class="fa-solid fa-box-open" style="font-size: 48px; color: #94a3b8; margin-bottom: 15px;"></i>
-                <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 16px;">Belum Ada Produk Tersedia</h4>
-                <p style="margin: 0; color: #7f8c8d; font-size: 14px;">Silakan tambahkan data obat melalui menu <strong>Master Obat</strong> atau input stok terlebih dahulu.</p>
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: #f8f9fa; border-radius: 12px; border: 1px solid #ecf0f1;">
+                <i class="fa-solid fa-box-open" style="font-size: 40px; color: #94a3b8; margin-bottom: 10px;"></i>
+                <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 15px;">Belum Ada Produk</h4>
+                <p style="margin: 0; color: #7f8c8d; font-size: 13px;">Tambahkan obat melalui menu Master Obat.</p>
             </div>
         `;
         return;
     }
 
-    // Urutkan data: yang stoknya habis (0) akan ditaruh di bawah
-    data.sort((a, b) => {
-        const habisA = a.stok === 0 ? 1 : 0;
-        const habisB = b.stok === 0 ? 1 : 0;
-        return habisA - habisB;
-    });
+    data.sort((a, b) => (a.stok === 0 ? 1 : 0) - (b.stok === 0 ? 1 : 0));
 
     data.forEach((obat) => {
         const itemDiKeranjang = keranjang.find((item) => item.id_obat === obat.id);
@@ -63,40 +58,41 @@ function renderGrid(data) {
 
         const card = document.createElement("div");
         card.className = "card";
+        card.style.cssText = "background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 210px; box-sizing: border-box; box-shadow: 0 2px 4px rgba(0,0,0,0.02);";
 
         let bagianGambar = "";
         if (obat.gambar && obat.gambar.trim() !== "" && obat.gambar !== "null" && obat.gambar !== "undefined") {
             bagianGambar = `
-                <div class="product-img-container" style="width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 8px 8px 0 0;">
-                    <img src="${obat.gambar}" alt="${obat.nama}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px 8px 0 0;"
-                         onerror="this.parentElement.innerHTML='<div style=&quot;width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 8px 8px 0 0;&quot;><i class=&quot;fa-solid fa-pills&quot; style=&quot;color: #94a3b8; font-size: 32px;&quot;></i></div>'">
+                <div class="product-img-container" style="width: 100%; height: 90px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 6px; overflow: hidden; margin-bottom: 6px;">
+                    <img src="${obat.gambar}" alt="${obat.nama}" style="width: 100%; height: 90px; object-fit: cover;"
+                         onerror="this.parentElement.innerHTML='<i class=&quot;fa-solid fa-pills&quot; style=&quot;color: #94a3b8; font-size: 24px;&quot;></i>'">
                 </div>
             `;
         } else {
             bagianGambar = `
-                <div class="product-img-container" style="width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 8px 8px 0 0;">
-                    <div class="fallback-icon">
-                        <i class="fa-solid fa-pills" style="color: #94a3b8; font-size: 32px;"></i>
-                    </div>
+                <div class="product-img-container" style="width: 100%; height: 90px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 6px; margin-bottom: 6px;">
+                    <i class="fa-solid fa-pills" style="color: #94a3b8; font-size: 24px;"></i>
                 </div>
             `;
         }
 
         card.innerHTML = `
-            ${bagianGambar}
-            <h4>${obat.nama}</h4>
-            <p style="color: #27ae60; font-weight: bold; margin: 5px 0;">${formatRupiah(obat.harga)}</p>
-            <p class="stok ${isHabis ? "stok-habis" : ""}">
-                ${isHabis ? 'Stok Kosong' : 'Sisa Stok: ' + obat.stok}
-            </p>
+            <div>
+                ${bagianGambar}
+                <h4 style="margin: 0 0 2px 0; font-size: 13px; color: #1e293b; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${obat.nama}">${obat.nama}</h4>
+                <p style="color: #27ae60; font-weight: bold; margin: 0 0 2px 0; font-size: 12px;">${formatRupiah(obat.harga)}</p>
+                <p style="margin: 0; font-size: 11px; color: ${isHabis ? '#e74c3c' : '#64748b'}; font-weight: 500;">
+                    ${isHabis ? 'Stok Kosong' : 'Sisa: ' + obat.stok}
+                </p>
+            </div>
             
-            <div class="qty-control">
-                <button class="btn-qty" onclick="ubahQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, -1, ${obat.stok})" ${qtySekarang === 0 ? "disabled" : ""}><i class="fa-solid fa-minus"></i></button>
+            <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: #f8f9fa; padding: 4px; border-radius: 6px;">
+                <button class="btn-qty" onclick="ubahQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, -1, ${obat.stok})" ${qtySekarang === 0 ? "disabled" : ""} style="background: #fff; border: 1px solid #cbd5e1; width: 24px; height: 24px; border-radius: 4px; cursor: pointer;"><i class="fa-solid fa-minus" style="font-size: 9px;"></i></button>
                 
-                <input type="number" class="qty-input-custom" value="${qtySekarang}" min="0" max="${obat.stok}" 
+                <input type="number" class="qty-input-custom" value="${qtySekarang}" min="0" max="${obat.stok}" style="width: 35px; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px; padding: 2px;"
                        oninput="ketikQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, this.value, ${obat.stok})">
                        
-                <button class="btn-qty" onclick="ubahQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, 1, ${obat.stok})" ${stokTersedia <= 0 ? "disabled" : ""}><i class="fa-solid fa-plus"></i></button>
+                <button class="btn-qty" onclick="ubahQtyCard(${obat.id}, '${obat.nama}', ${obat.harga}, 1, ${obat.stok})" ${stokTersedia <= 0 ? "disabled" : ""} style="background: #fff; border: 1px solid #cbd5e1; width: 24px; height: 24px; border-radius: 4px; cursor: pointer;"><i class="fa-solid fa-plus" style="font-size: 9px;"></i></button>
             </div>
         `;
         grid.appendChild(card);
@@ -111,15 +107,36 @@ function filterObat() {
   renderGrid(dataTerfilter);
 }
 
-function updateNotifikasiKeranjang() {
-  const totalItem = keranjang.reduce((total, item) => total + item.jumlah, 0);
-  document.getElementById("cartCount").innerText = totalItem;
-}
+function hitungKembalian() {
+    const elTotal = document.getElementById("grandTotal");
+    let grandTotal = 0;
+    
+    if (elTotal) {
+        let rawText = elTotal.innerText.replace(/[^0-9]/g, '');
+        grandTotal = parseInt(rawText) || 0;
+    }
 
-function toggleModal(buka) {
-  const modal = document.getElementById("cartModal");
-  modal.style.display = buka ? "flex" : "none";
-  if (!buka) document.getElementById("pesan").style.display = "none";
+    const inputUang = document.getElementById("inputUangDiterima").value;
+    const uangDiterima = parseFloat(inputUang) || 0;
+    const labelKembalian = document.getElementById("labelKembalian");
+    const btnProses = document.getElementById("btnProsesPembayaran");
+
+    window.selisihKembalian = uangDiterima - grandTotal;
+
+    if (uangDiterima === 0) {
+        labelKembalian.innerText = "Rp 0";
+        labelKembalian.style.color = "#7f8c8d";
+        if (btnProses) { btnProses.disabled = false; btnProses.style.opacity = "1"; btnProses.style.cursor = "pointer"; }
+    } else if (window.selisihKembalian < 0) {
+        let kurang = Math.abs(window.selisihKembalian);
+        labelKembalian.innerText = "Kurang Rp " + kurang.toLocaleString('id-ID');
+        labelKembalian.style.color = "#e74c3c";
+        if (btnProses) { btnProses.disabled = true; btnProses.style.opacity = "0.5"; btnProses.style.cursor = "not-allowed"; }
+    } else {
+        labelKembalian.innerText = "Rp " + window.selisihKembalian.toLocaleString('id-ID');
+        labelKembalian.style.color = "#27ae60";
+        if (btnProses) { btnProses.disabled = false; btnProses.style.opacity = "1"; btnProses.style.cursor = "pointer"; }
+    }
 }
 
 function renderTabelKeranjang() {
@@ -127,9 +144,9 @@ function renderTabelKeranjang() {
   tbody.innerHTML = "";
 
   if (keranjang.length === 0) {
-    tbody.innerHTML =
-      '<tr><td colspan="4" style="text-align:center;">Keranjang kosong</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 30px; color: #94a3b8;">Keranjang belanja kosong</td></tr>';
     document.getElementById("grandTotal").innerText = formatRupiah(0);
+    hitungKembalian();
     return;
   }
 
@@ -140,62 +157,42 @@ function renderTabelKeranjang() {
     grandTotal += subtotal;
 
     tbody.innerHTML += `
-            <tr>
-                <td><strong>${item.nama}</strong><br><small>${formatRupiah(item.harga)}</small></td>
-                <td>
-                    <input type="number" value="${item.jumlah}" min="1" 
-                           style="width:50px; padding:5px; text-align:center;"
-                           onchange="ubahJumlahModal(${index}, this.value)">
-                </td>
-                <td>${formatRupiah(subtotal)}</td>
-                <td><button class="btn-hapus" onclick="hapusItem(${index})">X</button></td>
-            </tr>
-        `;
+        <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #f1f5f9;"><strong>${item.nama}</strong><br><small style="color:#64748b;">${formatRupiah(item.harga)}</small></td>
+            <td style="padding: 8px; border-bottom: 1px solid #f1f5f9; text-align: center;">
+                <input type="number" value="${item.jumlah}" min="1" style="width: 40px; padding: 4px; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px;" oninput="ubahJumlahModal(${index}, this.value)">
+            </td>
+            <td style="padding: 8px; border-bottom: 1px solid #f1f5f9; text-align: right; font-weight: 500;">${formatRupiah(subtotal)}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #f1f5f9; text-align: center;">
+                <button onclick="hapusItem(${index})" style="background: #fee2e2; color: #ef4444; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        </tr>
+    `;
   });
 
   document.getElementById("grandTotal").innerText = formatRupiah(grandTotal);
+  hitungKembalian();
 }
 
 function ketikQtyCard(id, nama, harga, nilaiBaru, maxStok) {
   const indexAda = keranjang.findIndex((item) => item.id_obat === id);
-
-  // Jika dikosongkan sementara (sedang mengetik / menghapus)
   if (nilaiBaru === "" || nilaiBaru === null) {
-    if (indexAda > -1) {
-      keranjang.splice(indexAda, 1);
-    }
-    updateNotifikasiKeranjang();
+    if (indexAda > -1) keranjang.splice(indexAda, 1);
     renderTabelKeranjang();
     return;
   }
-
-  let jumlahBaru = parseInt(nilaiBaru);
-  if (isNaN(jumlahBaru) || jumlahBaru < 0) jumlahBaru = 0;
-
-  // Validasi agar tidak melebihi sisa stok
-  if (jumlahBaru > maxStok) {
-    alert("Jumlah melebihi sisa stok yang tersedia!");
-    jumlahBaru = maxStok;
-    event.target.value = maxStok;
-  }
+  let jumlahBaru = parseInt(nilaiBaru) || 0;
+  if (jumlahBaru > maxStok) { alert("Jumlah melebihi sisa stok!"); jumlahBaru = maxStok; }
 
   if (jumlahBaru === 0) {
-    if (indexAda > -1) {
-      keranjang.splice(indexAda, 1);
-    }
+    if (indexAda > -1) keranjang.splice(indexAda, 1);
   } else {
-    if (indexAda > -1) {
-      keranjang[indexAda].jumlah = jumlahBaru;
-    } else {
-      keranjang.push({ id_obat: id, nama: nama, harga: harga, jumlah: jumlahBaru });
-    }
+    if (indexAda > -1) { keranjang[indexAda].jumlah = jumlahBaru; }
+    else { keranjang.push({ id_obat: id, nama: nama, harga: harga, jumlah: jumlahBaru }); }
   }
-
-  updateNotifikasiKeranjang();
   renderTabelKeranjang();
 }
 
-// Tambahkan fungsi pendukung ini agar saat kotak input diklik lalu dikosongkan/ditinggal (blur), otomatis berubah jadi angka 0
 document.addEventListener("blur", function(event) {
   if (event.target.classList.contains("qty-input-custom")) {
     if (event.target.value === "") {
@@ -206,91 +203,29 @@ document.addEventListener("blur", function(event) {
 
 function ubahQtyCard(id, nama, harga, perubahan, maxStok) {
   const indexAda = keranjang.findIndex((item) => item.id_obat === id);
-
   if (indexAda > -1) {
     let jumlahBaru = keranjang[indexAda].jumlah + perubahan;
-    if (jumlahBaru > maxStok) {
-      alert("Maksimal stok tercapai!");
-      return;
-    }
-    if (jumlahBaru <= 0) {
-      keranjang.splice(indexAda, 1);
-    } else {
-      keranjang[indexAda].jumlah = jumlahBaru;
-    }
-  } else if (perubahan > 0) {
-    if (maxStok > 0) {
-      keranjang.push({ id_obat: id, nama: nama, harga: harga, jumlah: 1 });
-    }
+    if (jumlahBaru > maxStok) { alert("Maksimal stok tercapai!"); return; }
+    if (jumlahBaru <= 0) keranjang.splice(indexAda, 1);
+    else keranjang[indexAda].jumlah = jumlahBaru;
+  } else if (perubahan > 0 && maxStok > 0) {
+    keranjang.push({ id_obat: id, nama: nama, harga: harga, jumlah: 1 });
   }
-
-  updateNotifikasiKeranjang();
   renderTabelKeranjang();
   filterObat();
 }
 
-function renderTabelKeranjang() {
-  const tbody = document.querySelector("#tabelKeranjang tbody");
-  tbody.innerHTML = "";
-
-  if (keranjang.length === 0) {
-    tbody.innerHTML =
-      '<tr><td colspan="4" style="text-align:center;">Keranjang kosong</td></tr>';
-    document.getElementById("grandTotal").innerText = formatRupiah(0);
-    return;
-  }
-
-  let grandTotal = 0;
-
-  keranjang.forEach((item, index) => {
-    let subtotal = item.harga * item.jumlah;
-    grandTotal += subtotal;
-
-    tbody.innerHTML += `
-        <tr>
-            <td><strong>${item.nama}</strong><br><small>${formatRupiah(item.harga)}</small></td>
-            <td>
-                <!-- Gunakan oninput agar setiap ketikan langsung merespon tanpa harus kehilangan fokus -->
-                <input type="number" value="${item.jumlah}" min="1" 
-                       style="width: 60px; padding: 6px; text-align: center; border: 1px solid #ccc; border-radius: 4px;"
-                       oninput="ubahJumlahModal(${index}, this.value)">
-            </td>
-            <td>${formatRupiah(subtotal)}</td>
-            <td><button class="btn-hapus" onclick="hapusItem(${index})" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button></td>
-        </tr>
-    `;
-  });
-
-  document.getElementById("grandTotal").innerText = formatRupiah(grandTotal);
-}
-
-// Dan pastikan fungsi ubahJumlahModal menanganinya dengan aman seperti ini:
 function ubahJumlahModal(index, nilaiBaru) {
-  // Jika input dikosongkan sementara oleh kasir, jangan langsung di-reset atau di-block
   if (nilaiBaru === "") return;
-
   const jml = parseInt(nilaiBaru);
-  
   if (!isNaN(jml) && jml > 0) {
     keranjang[index].jumlah = jml;
-    updateNotifikasiKeranjang();
-    
-    // Update subtotal teks secara langsung pada baris tersebut agar reaktif 
-    // atau render ulang tabel dengan aman
-    const subtotalCell = document.querySelectorAll("#tabelKeranjang tbody tr")[index]?.querySelectorAll("td")[2];
-    if (subtotalCell) {
-      subtotalCell.innerText = formatRupiah(keranjang[index].harga * jml);
-    }
-    
-    document.getElementById("grandTotal").innerText = formatRupiah(
-      keranjang.reduce((total, item) => total + (item.harga * item.jumlah), 0)
-    );
+    renderTabelKeranjang();
   }
 }
 
 function hapusItem(index) {
   keranjang.splice(index, 1);
-  updateNotifikasiKeranjang();
   renderTabelKeranjang();
   filterObat();
 }
@@ -300,16 +235,21 @@ async function prosesTransaksi() {
   pesanDiv.style.display = "block";
 
   if (keranjang.length === 0) {
-    pesanDiv.style.background = "#f8d7da";
-    pesanDiv.style.color = "#721c24";
-    pesanDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Keranjang masih kosong!';
+    pesanDiv.style.color = "#e74c3c";
+    pesanDiv.innerText = "Keranjang belanja kosong!";
+    return;
+  }
+
+  if (window.selisihKembalian < 0) {
+    pesanDiv.style.color = "#e74c3c";
+    pesanDiv.innerText = "Uang pembayaran kurang!";
     return;
   }
 
   const kasirAktif = localStorage.getItem("user_apotek") || "admin";
+  const uangTunaiVal = parseFloat(document.getElementById("inputUangDiterima").value) || 0;
 
-  pesanDiv.style.background = "#f1c40f";
-  pesanDiv.style.color = "black";
+  pesanDiv.style.color = "#f39c12";
   pesanDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses transaksi...';
 
   try {
@@ -318,122 +258,94 @@ async function prosesTransaksi() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         kasir: kasirAktif,
-        keranjang: keranjang.map((item) => ({
-          id_obat: item.id_obat,
-          jumlah: item.jumlah,
-        })),
+        keranjang: keranjang.map((item) => ({ id_obat: item.id_obat, jumlah: item.jumlah })),
       }),
     });
 
     const result = await response.json();
 
     if (response.ok) {
-      pesanDiv.style.background = "#d4edda";
-      pesanDiv.style.color = "#155724";
-      pesanDiv.innerHTML = `<i class="fa-solid fa-circle-check"></i> Transaksi Sukses! (ID Nota: #${result.id_nota})`;
+      pesanDiv.style.color = "#27ae60";
+      pesanDiv.innerHTML = `<i class="fa-solid fa-circle-check"></i> Transaksi Sukses!`;
 
       document.getElementById("strukId").innerText = "#" + result.id_nota;
       document.getElementById("strukWaktu").innerText = new Date().toLocaleString("id-ID");
+      document.getElementById("strukKasir").innerText = kasirAktif;
 
       let strukHtml = "";
       let grandTotalStruk = 0;
       keranjang.forEach((item) => {
         let sub = item.harga * item.jumlah;
         grandTotalStruk += sub;
-        strukHtml += `
-            <tr><td colspan="2">${item.nama}</td></tr>
-            <tr><td>${item.jumlah} x ${formatRupiah(item.harga)}</td><td style="text-align: right;">${formatRupiah(sub)}</td></tr>
-        `;
+        strukHtml += `<tr><td colspan="2">${item.nama}</td></tr><tr><td>${item.jumlah} x ${formatRupiah(item.harga)}</td><td style="text-align: right;">${formatRupiah(sub)}</td></tr>`;
       });
+
       document.getElementById("strukItemBody").innerHTML = strukHtml;
       document.getElementById("strukTotal").innerText = formatRupiah(grandTotalStruk);
+      document.getElementById("strukTunai").innerText = formatRupiah(uangTunaiVal);
+      document.getElementById("strukKembali").innerText = formatRupiah(window.selisihKembalian);
 
-      cetakNotaStruk(result.id_nota, keranjang, grandTotalStruk);
+      cetakNotaStruk(result.id_nota, keranjang, grandTotalStruk, uangTunaiVal, window.selisihKembalian);
 
+      // Reset kasir
       keranjang = [];
-      updateNotifikasiKeranjang();
+      localStorage.removeItem("keranjang_apotek");
+      document.getElementById("inputUangDiterima").value = "";
       renderTabelKeranjang();
       await muatDaftarObat();
-
-      setTimeout(() => toggleModal(false), 1200);
+      setTimeout(() => pesanDiv.style.display = "none", 3000);
     } else {
-      pesanDiv.style.background = "#f8d7da";
-      pesanDiv.style.color = "#721c24";
-      pesanDiv.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Gagal: ${result.detail}`;
+      pesanDiv.style.color = "#e74c3c";
+      pesanDiv.innerText = `Gagal: ${result.detail}`;
     }
   } catch (error) {
-    pesanDiv.style.background = "#f8d7da";
-    pesanDiv.style.color = "#721c24";
-    pesanDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Error server: Pastikan API berjalan!`;
+    pesanDiv.style.color = "#e74c3c";
+    pesanDiv.innerText = `Error server: Pastikan API aktif!`;
   }
 }
 
-// --- FITUR RIWAYAT TRANSAKSI ---
-
+// Riwayat Transaksi
 async function bukaRiwayat() {
-  const modal = document.getElementById("riwayatModal");
-  modal.style.display = "flex";
-
+  document.getElementById("riwayatModal").style.display = "flex";
   const tbody = document.querySelector("#tabelRiwayat tbody");
-  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat data...</td></tr>';
-
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Memuat data...</td></tr>';
   try {
     const response = await fetch(`${window.API_URL}/laporan/harian`);
     const data = await response.json();
-
     tbody.innerHTML = "";
     if (data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada riwayat transaksi.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada riwayat.</td></tr>';
       return;
     }
-
-    data.forEach((transaksi) => {
-      tbody.innerHTML += `
-        <tr>
-            <td>#${transaksi.id_nota}</td>
-            <td><i class="fa-solid fa-user-tie" style="margin-right: 4px; color: #64748b;"></i> ${transaksi.kasir}</td>
-            <td>${transaksi.waktu}</td>
-            <td>${transaksi.total_item} Item</td>
-            <td>
-                <button style="background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;" 
-                        onclick="cetakUlang(${transaksi.id_nota})">
-                    <i class="fa-solid fa-print"></i> Cetak
-                </button>
-            </td>
-        </tr>
-      `;
+    data.forEach((t) => {
+      tbody.innerHTML += `<tr><td>#${t.id_nota}</td><td>${t.kasir}</td><td>${t.waktu}</td><td>${t.total_item} Item</td><td><button onclick="cetakUlang(${t.id_nota})" style="background:#27ae60; color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;"><i class="fa-solid fa-print"></i></button></td></tr>`;
     });
-  } catch (error) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;"><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat riwayat dari server.</td></tr>';
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">Gagal memuat riwayat.</td></tr>';
   }
 }
 
-function tutupRiwayat() {
-  document.getElementById("riwayatModal").style.display = "none";
-}
+function tutupRiwayat() { document.getElementById("riwayatModal").style.display = "none"; }
 
 async function cetakUlang(idNota) {
   try {
-    const response = await fetch(
-      `${window.API_URL}/laporan/detail/${idNota}`,
-    );
-    if (!response.ok) throw new Error("Gagal mengambil detail transaksi.");
-
-    const data = await response.json();
+    const res = await fetch(`${window.API_URL}/laporan/detail/${idNota}`);
+    const data = await res.json();
     cetakNotaStruk(data.id_nota, data.keranjang, data.grand_total);
-  } catch (error) {
-    alert("Terjadi kesalahan saat mencetak ulang nota: " + error.message);
-  }
+  } catch (e) { alert("Gagal cetak ulang nota."); }
 }
 
-function formatRupiah(angka) {
-  return "Rp " + angka.toLocaleString("id-ID");
-}
+function formatRupiah(angka) { return "Rp " + angka.toLocaleString("id-ID"); }
+window.addEventListener('load', () => { if (document.getElementById("productGrid")) muatDaftarObat(); });
 
 function initKasir() {
   if (document.getElementById("productGrid")) {
     muatDaftarObat();
+    renderTabelKeranjang(); // Memuat kembali keranjang dari localStorage jika ada
   }
 }
 
 window.addEventListener('load', initKasir);
+
+// Ekspos fungsi ke objek window agar router/sidebar aplikasi Anda bisa memanggilnya saat pindah menu
+window.initKasir = initKasir;

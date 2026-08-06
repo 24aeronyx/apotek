@@ -8,15 +8,16 @@
         </div>
 
         <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left;" id="tableOpname">
+            <!-- Menggunakan tag table biasa agar otomatis mengikuti style global -->
+            <table id="tableOpname">
                 <thead>
-                    <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                        <th style="padding: 12px;">No Batch</th>
-                        <th style="padding: 12px;">Nama Obat</th>
-                        <th style="padding: 12px;">Harga Beli</th>
-                        <th style="padding: 12px;">ED (Kedaluwarsa)</th>
-                        <th style="padding: 12px;">Stok Sistem</th>
-                        <th style="padding: 12px; text-align: center;">Aksi Opname</th>
+                    <tr>
+                        <th>No Batch</th>
+                        <th>Nama Obat</th>
+                        <th>Harga Beli</th>
+                        <th>ED (Kedaluwarsa)</th>
+                        <th>Stok Sistem</th>
+                        <th style="text-align: center;">Aksi Opname</th>
                     </tr>
                 </thead>
                 <tbody id="batchTableBody">

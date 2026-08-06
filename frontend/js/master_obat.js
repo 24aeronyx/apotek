@@ -37,13 +37,20 @@ function renderTabelMaster(data) {
         }
 
         let stokBadge = `<span style="font-weight: bold; color: ${obat.total_stok > 0 ? '#27ae60' : '#e74c3c'};">${obat.total_stok || 0}</span>`;
+        
+        // ==========================================
+        // INDIKATOR / BADGE STATUS AKTIF & NON-AKTIF
+        // ==========================================
+        let statusBadge = obat.is_active !== false 
+            ? `<span style="background: #e1f5fe; color: #0288d1; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-left: 8px;">Aktif</span>`
+            : `<span style="background: #f1f5f9; color: #64748b; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-left: 8px;">Non-Aktif</span>`;
 
         const batchesJSON = encodeURIComponent(JSON.stringify(obat.batches || []));
 
         tbody.innerHTML += `
             <tr>
                 <td>${tampilanGambar}</td>
-                <td><strong>${obat.nama}</strong></td>
+                <td><strong>${obat.nama}</strong> ${statusBadge}</td>
                 <td>${obat.kategori}</td>
                 <td>Rp ${(obat.harga_jual || 0).toLocaleString('id-ID')}</td>
                 <td style="text-align: center;">${stokBadge}</td>
@@ -152,16 +159,18 @@ function bukaModalTambah() {
     document.getElementById('kategoriObat').value = "Umum";
     document.getElementById('hargaJual').value = "0";
     document.getElementById('fileGambar').value = "";
+    document.getElementById('statusAktif').checked = true; // Obat baru otomatis aktif
     document.getElementById('modalMaster').style.display = 'flex';
 }
 
-function editMaster(id, nama, kategori, harga) {
+function editMaster(id, nama, kategori, harga, isActive = true) {
     document.getElementById('modalTitle').innerText = "Edit Master Obat";
     document.getElementById('obatId').value = id;
     document.getElementById('namaObat').value = nama;
     document.getElementById('kategoriObat').value = kategori;
     document.getElementById('hargaJual').value = harga;
     document.getElementById('fileGambar').value = "";
+    document.getElementById('statusAktif').checked = isActive; // Sesuai status dari database
     document.getElementById('modalMaster').style.display = 'flex';
 }
 
@@ -175,6 +184,7 @@ async function simpanMasterObat(event) {
     const nama = document.getElementById('namaObat').value;
     const kategori = document.getElementById('kategoriObat').value;
     const harga_jual = parseInt(document.getElementById('hargaJual').value) || 0;
+    const is_active = document.getElementById('statusAktif').checked; // <-- Ambil status checkbox
     const fileInput = document.getElementById('fileGambar');
 
     let urlGambarFinal = "";
@@ -188,16 +198,16 @@ async function simpanMasterObat(event) {
         }
     }
 
-    // Jika sedang mode Edit, cek apakah ada perubahan data dibandingkan data lama
     if (id) {
         const dataLama = listMasterObat.find(o => o.id == id);
         if (dataLama) {
             const isNamaSama = dataLama.nama === nama;
             const isKategoriSama = dataLama.kategori === kategori;
             const isHargaSama = dataLama.harga_jual === harga_jual;
-            const isGambarSama = !urlGambarFinal; // Jika tidak upload file baru
+            const isStatusSama = dataLama.is_active === is_active; // <-- Cek perubahan status
+            const isGambarSama = !urlGambarFinal;
 
-            if (isNamaSama && isKategoriSama && isHargaSama && isGambarSama) {
+            if (isNamaSama && isKategoriSama && isHargaSama && isStatusSama && isGambarSama) {
                 tutupModal();
                 tampilkanAlert("Informasi", "Tidak ada perubahan data yang disimpan.", "info");
                 return;
@@ -209,6 +219,7 @@ async function simpanMasterObat(event) {
         nama: nama,
         kategori: kategori,
         harga_jual: harga_jual,
+        is_active: is_active, // <-- Masukkan ke payload
         ...(urlGambarFinal && { gambar: urlGambarFinal })
     };
 

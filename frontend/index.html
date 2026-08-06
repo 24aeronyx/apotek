@@ -1,337 +1,555 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>POS Apotek Modern - Kasir</title>
     <!-- CSS Utama & FontAwesome -->
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Pustaka jsPDF dan Plugin AutoTable -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <style>
-        /* Layout Sidebar & Main Content */
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
+      /* Layout Sidebar & Main Content */
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f7f6;
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
 
-        /* Styling Sidebar */
-        .sidebar {
-            width: 260px;
-            background: #2c3e50;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            box-shadow: 4px 0 10px rgba(0,0,0,0.05);
-            z-index: 100;
-        }
+      /* Styling Sidebar */
+      .sidebar {
+        width: 260px;
+        background: #2c3e50;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 4px 0 10px rgba(0, 0, 0, 0.05);
+        z-index: 100;
+      }
 
-        .sidebar-brand {
-            padding: 20px;
-            font-size: 18px;
-            font-weight: bold;
-            background: #1a252f;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #1abc9c;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
+      .sidebar-brand {
+        padding: 20px;
+        font-size: 18px;
+        font-weight: bold;
+        background: #1a252f;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #1abc9c;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
 
-        .sidebar-menu {
-            list-style: none;
-            padding: 15px 0;
-            margin: 0;
-            flex-grow: 1;
-            overflow-y: auto;
-        }
+      .sidebar-menu {
+        list-style: none;
+        padding: 15px 0;
+        margin: 0;
+        flex-grow: 1;
+        overflow-y: auto;
+      }
 
-        .sidebar-menu li a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            color: #cbd5e1;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
+      .sidebar-menu li a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        color: #cbd5e1;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.2s ease;
+      }
 
-        .sidebar-menu li a:hover, .sidebar-menu li a.active {
-            background: #16a085;
-            color: white;
-            padding-left: 25px;
-        }
+      .sidebar-menu li a:hover,
+      .sidebar-menu li a.active {
+        background: #16a085;
+        color: white;
+        padding-left: 25px;
+      }
 
-        .sidebar-footer {
-            padding: 15px 20px;
-            background: #1a252f;
-            border-top: 1px solid rgba(255,255,255,0.05);
-        }
+      .sidebar-footer {
+        padding: 15px 20px;
+        background: #1a252f;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+      }
 
-        .btn-logout {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-size: 14px;
-            transition: background 0.2s;
-        }
+      .btn-logout {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 14px;
+        transition: background 0.2s;
+      }
 
-        .btn-logout:hover {
-            background: #c0392b;
-        }
+      .btn-logout:hover {
+        background: #c0392b;
+      }
 
-        /* Styling Konten Utama di Kanan */
-        .main-wrapper {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
+      /* Styling Konten Utama di Kanan */
+      .main-wrapper {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
 
-        /* Topbar di dalam Konten Utama */
-        .topbar {
-            background: white;
-            padding: 15px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #e2e8f0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
+      /* Topbar di dalam Konten Utama */
+      .topbar {
+        background: white;
+        padding: 15px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e2e8f0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+      }
 
-        .topbar h2 {
-            margin: 0;
-            font-size: 20px;
-            color: #2c3e50;
-        }
+      .topbar h2 {
+        margin: 0;
+        font-size: 20px;
+        color: #2c3e50;
+      }
 
-        /* Area Konten Dinamis */
-        .content-area {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 25px;
-            position: relative;
-        }
+      /* Area Konten Dinamis */
+      .content-area {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 25px;
+        position: relative;
+      }
+      .floating-notification-box {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #ffffff;
+        border-left: 5px solid #e74c3c;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        padding: 15px;
+        width: 320px;
+        z-index: 9999;
+        font-size: 13px;
+        display: none; /* Muncul otomatis jika ada peringatan */
+        transition: all 0.3s ease;
+      }
+      .floating-notification-box.active {
+        display: block;
+      }
+      .floating-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        border-bottom: 1px solid #ecf0f1;
+        padding-bottom: 5px;
+      }
+      .floating-content p {
+        margin: 4px 0;
+        color: #555;
+      }
+      .btn-close-float {
+        background: none;
+        border: none;
+        font-size: 16px;
+        cursor: pointer;
+        color: #95a5a6;
+      }
+      .badge-alert-count {
+        background: #e74c3c;
+        color: white;
+        border-radius: 50%;
+        padding: 2px 6px;
+        font-size: 11px;
+        font-weight: bold;
+      }
     </style>
-</head>
-<body>
-
-<!-- SIDEBAR NAVIGASI KIRI -->
-<div class="sidebar">
-    <div>
+  </head>
+  <body>
+    <!-- SIDEBAR NAVIGASI KIRI -->
+    <div class="sidebar">
+      <div>
         <div class="sidebar-brand">
-            <i class="fa-solid fa-pills" style="font-size: 22px;"></i>
-            <span>POS APOTEK</span>
+          <i class="fa-solid fa-pills" style="font-size: 22px"></i>
+          <span>POS APOTEK</span>
         </div>
-        
-       <ul class="sidebar-menu" style="padding: 10px 0; margin: 0; list-style: none;">
-            
-            <!-- KELOMPOK 1: TRANSAKSI & OPERASIONAL -->
-            <li style="padding: 10px 20px 5px 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: bold;">Transaksi & Operasional</li>
-            <li><a href="#" onclick="muatHalaman('/pages/kasir.html', this)" class="active"><i class="fa-solid fa-cash-register"></i> Kasir Utama</a></li>
-            <li><a href="#" onclick="muatHalaman('/pages/pembelian.html', this)"><i class="fa-solid fa-truck-ramp-box"></i> Input Stok (Faktur)</a></li>
-            <li><a href="#" onclick="muatHalaman('/pages/daftar_faktur.html', this)"><i class="fa-solid fa-file-invoice-dollar"></i> Daftar Faktur Masuk</a></li>
-            <li><a href="#" onclick="muatHalaman('/pages/retur.html', this)"><i class="fa-solid fa-rotate-left"></i> Return Penjualan</a></li>
-            
-            <!-- KELOMPOK 2: MASTER & INVENTARIS -->
-            <li style="padding: 15px 20px 5px 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: bold; margin-top: 5px;">Data & Inventaris</li>
-            <li><a href="#" onclick="muatHalaman('/pages/supplier.html', this)"><i class="fa-solid fa-truck-field"></i> Data Supplier</a></li>
-            <li><a href="#" onclick="muatHalaman('/pages/master_obat.html', this)"><i class="fa-solid fa-boxes-stacked"></i> Master Obat</a></li>
-            <li><a href="#" onclick="muatHalaman('/pages/stok_opname.html', this)"><i class="fa-solid fa-boxes-packing"></i> Stok Opname & ED</a></li>
-            
-            <!-- KELOMPOK 3: LAPORAN -->
-            <li style="padding: 15px 20px 5px 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: bold; margin-top: 5px;">Analitik & Laporan</li>
-            <li><a href="#" onclick="muatHalaman('/pages/dashboard.html', this)"><i class="fa-solid fa-chart-pie"></i> Dashboard & Keuangan</a></li>
-            <li><a href="#" onclick="muatHalaman('/pages/kartu_stok.html', this)"><i class="fa-solid fa-clock-rotate-left"></i> Kartu Stok Harian</a></li>
-            
+
+        <ul
+          class="sidebar-menu"
+          style="padding: 10px 0; margin: 0; list-style: none"
+        >
+          <!-- KELOMPOK 1: TRANSAKSI & OPERASIONAL -->
+          <li
+            style="
+              padding: 10px 20px 5px 20px;
+              font-size: 11px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              color: #94a3b8;
+              font-weight: bold;
+            "
+          >
+            Transaksi & Operasional
+          </li>
+          <li>
+            <a
+              href="#"
+              onclick="muatHalaman('/pages/kasir.html', this)"
+              class="active"
+              ><i class="fa-solid fa-cash-register"></i> Kasir Utama</a
+            >
+          </li>
+          <li>
+            <a href="#" onclick="muatHalaman('/pages/pembelian.html', this)"
+              ><i class="fa-solid fa-truck-ramp-box"></i> Input Stok (Faktur)</a
+            >
+          </li>
+          <li>
+            <a href="#" onclick="muatHalaman('/pages/daftar_faktur.html', this)"
+              ><i class="fa-solid fa-file-invoice-dollar"></i> Daftar Faktur
+              Masuk</a
+            >
+          </li>
+          <li>
+            <a href="#" onclick="muatHalaman('/pages/retur.html', this)"
+              ><i class="fa-solid fa-rotate-left"></i> Return Penjualan</a
+            >
+          </li>
+
+          <!-- KELOMPOK 2: MASTER & INVENTARIS -->
+          <li
+            style="
+              padding: 15px 20px 5px 20px;
+              font-size: 11px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              color: #94a3b8;
+              font-weight: bold;
+              margin-top: 5px;
+            "
+          >
+            Data & Inventaris
+          </li>
+          <li>
+            <a href="#" onclick="muatHalaman('/pages/supplier.html', this)"
+              ><i class="fa-solid fa-truck-field"></i> Data Supplier</a
+            >
+          </li>
+          <li>
+            <a href="#" onclick="muatHalaman('/pages/master_obat.html', this)"
+              ><i class="fa-solid fa-boxes-stacked"></i> Master Obat</a
+            >
+          </li>
+          <li>
+            <a href="#" onclick="muatHalaman('/pages/stok_opname.html', this)"
+              ><i class="fa-solid fa-boxes-packing"></i> Stok Opname & ED</a
+            >
+          </li>
+
+          <!-- KELOMPOK 3: LAPORAN -->
+          <li
+            style="
+              padding: 15px 20px 5px 20px;
+              font-size: 11px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              color: #94a3b8;
+              font-weight: bold;
+              margin-top: 5px;
+            "
+          >
+            Analitik & Laporan
+          </li>
+          <li>
+            <a href="#" onclick="muatHalaman('/pages/dashboard.html', this)"
+              ><i class="fa-solid fa-chart-pie"></i> Dashboard & Keuangan</a
+            >
+          </li>
+          <li>
+            <a href="#" onclick="muatHalaman('/pages/kartu_stok.html', this)"
+              ><i class="fa-solid fa-clock-rotate-left"></i> Kartu Stok
+              Harian</a
+            >
+          </li>
         </ul>
-    </div>
-    
-    <div class="sidebar-footer">
-        <button class="btn-logout" onclick="localStorage.removeItem('user_apotek'); window.location.href='pages/login.html';">
-            <i class="fa-solid fa-right-from-bracket"></i> Keluar Sistem
+      </div>
+
+      <div class="sidebar-footer">
+        <button
+          class="btn-logout"
+          onclick="
+            localStorage.removeItem('user_apotek');
+            window.location.href = 'pages/login.html';
+          "
+        >
+          <i class="fa-solid fa-right-from-bracket"></i> Keluar Sistem
         </button>
+      </div>
     </div>
-</div>
 
-<!-- KONTEN UTAMA DI KANAN -->
-<div class="main-wrapper">
-    <div class="topbar">
-        <h2 id="pageTitle"><i class="fa-solid fa-cash-register" style="color: #1abc9c;"></i> Kasir Apotek</h2>
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <span id="userInfo" style="font-weight: bold; color: #7f8c8d; font-size: 14px;"><i class="fa-solid fa-user-circle"></i> Kasir Aktif</span>
+    <!-- KONTEN UTAMA DI KANAN -->
+    <div class="main-wrapper">
+      <div class="topbar">
+        <h2 id="pageTitle">
+          <i class="fa-solid fa-cash-register" style="color: #1abc9c"></i> Kasir
+          Apotek
+        </h2>
+        <div style="display: flex; align-items: center; gap: 15px">
+          <span
+            id="userInfo"
+            style="font-weight: bold; color: #7f8c8d; font-size: 14px"
+            ><i class="fa-solid fa-user-circle"></i> Kasir Aktif</span
+          >
         </div>
-    </div>
+      </div>
 
-    <!-- Area Konten (Tempat file HTML di-load secara dinamis) -->
-    <div class="content-area" id="contentArea">
+      <!-- Area Konten (Tempat file HTML di-load secara dinamis) -->
+      <div class="content-area" id="contentArea">
         <!-- Default memuat halaman kasir saat pertama dibuka -->
+      </div>
+
+      <div id="floatingAlertBox" class="floating-notification-box">
+        <div class="floating-header">
+          <span
+            ><i
+              class="fa-solid fa-triangle-exclamation"
+              style="color: #e74c3c"
+            ></i>
+            Peringatan Sistem
+            <span id="alertCountBadge" class="badge-alert-count">0</span></span
+          >
+          <button class="btn-close-float" onclick="tutupFloatingAlert()">
+            &times;
+          </button>
+        </div>
+        <div class="floating-content" id="floatingAlertText">
+          Memuat peringatan...
+        </div>
+      </div>
     </div>
-</div>
 
-<!-- Skrip Pengaturan Sidebar & Muat Halaman Dinamis -->
-<!-- Skrip Pengaturan Sidebar & Muat Halaman Dinamis -->
-<script>
-    let currentUrl = ''; // Menyimpan URL halaman yang sedang aktif
+    <!-- Skrip Pengaturan Sidebar & Muat Halaman Dinamis -->
+    <!-- Skrip Pengaturan Sidebar & Muat Halaman Dinamis -->
+    <script>
+      let currentUrl = ""; // Menyimpan URL halaman yang sedang aktif
 
-    // Fungsi untuk memuat file HTML ke dalam content-area secara dinamis
-    async function muatHalaman(url, element) {
+      // Fungsi untuk memuat file HTML ke dalam content-area secara dinamis
+      async function muatHalaman(url, element) {
         // Jika pengguna mengklik menu halaman yang sedang aktif, abaikan agar tidak reload berulang
         if (currentUrl === url) {
-            return;
+          return;
         }
         currentUrl = url;
 
         try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error("Gagal memuat halaman.");
-            const html = await response.text();
-            
-            // Masukkan isi HTML ke area konten
-            const contentArea = document.getElementById('contentArea');
-            contentArea.innerHTML = html;
+          const response = await fetch(url);
+          if (!response.ok) throw new Error("Gagal memuat halaman.");
+          const html = await response.text();
 
-            // Bersihkan script lama yang melekat khusus halaman dinamis sebelumnya
-            Array.from(document.querySelectorAll('script')).forEach(script => {
-                if (script.src && script.src.includes('/static/js/')) {
-                    script.remove();
-                }
-            });
-            Array.from(contentArea.querySelectorAll('script')).forEach(script => script.remove());
+          // Masukkan isi HTML ke area konten
+          const contentArea = document.getElementById("contentArea");
+          contentArea.innerHTML = html;
 
-            // Update status aktif pada menu sidebar
-            document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
-            if (element) {
-                element.classList.add('active');
-            } else {
-                // Jika dipanggil otomatis tanpa elemen (seperti saat pertama load), tandai menu yang sesuai
-                document.querySelectorAll('.sidebar-menu a').forEach(a => {
-                    if (a.getAttribute('onclick') && a.getAttribute('onclick').includes(url)) {
-                        a.classList.add('active');
-                    }
-                });
+          // Bersihkan script lama yang melekat khusus halaman dinamis sebelumnya
+          Array.from(document.querySelectorAll("script")).forEach((script) => {
+            if (script.src && script.src.includes("/static/js/")) {
+              script.remove();
             }
+          });
+          Array.from(contentArea.querySelectorAll("script")).forEach((script) =>
+            script.remove(),
+          );
 
-            // Eksekusi ulang script yang ada di dalam file yang dimuat
-            await evaluatScriptDinamis(url);
+          // Update status aktif pada menu sidebar
+          document
+            .querySelectorAll(".sidebar-menu a")
+            .forEach((a) => a.classList.remove("active"));
+          if (element) {
+            element.classList.add("active");
+          } else {
+            // Jika dipanggil otomatis tanpa elemen (seperti saat pertama load), tandai menu yang sesuai
+            document.querySelectorAll(".sidebar-menu a").forEach((a) => {
+              if (
+                a.getAttribute("onclick") &&
+                a.getAttribute("onclick").includes(url)
+              ) {
+                a.classList.add("active");
+              }
+            });
+          }
+
+          // Eksekusi ulang script yang ada di dalam file yang dimuat
+          await evaluatScriptDinamis(url);
         } catch (error) {
-            currentUrl = ''; // Reset jika gagal agar bisa diklik ulang
-            console.error(error);
-            document.getElementById('contentArea').innerHTML = `<div style="text-align:center; padding: 40px; color: #e74c3c;"><h3>Gagal Memuat Halaman</h3><p>${error.message}</p></div>`;
+          currentUrl = ""; // Reset jika gagal agar bisa diklik ulang
+          console.error(error);
+          document.getElementById("contentArea").innerHTML =
+            `<div style="text-align:center; padding: 40px; color: #e74c3c;"><h3>Gagal Memuat Halaman</h3><p>${error.message}</p></div>`;
         }
-    }
+      }
 
-    async function loadScript(src) {
+      async function loadScript(src) {
         if (!window.__loadedScripts) {
-            window.__loadedScripts = new Set();
+          window.__loadedScripts = new Set();
         }
 
         // Jika script sudah pernah di-load sebelumnya, cukup eksekusi ulang fungsi inisialisasinya tanpa hapus-pasang script tag
         if (window.__loadedScripts.has(src)) {
-            return;
+          return;
         }
 
         window.__loadedScripts.add(src);
 
         try {
-            const response = await fetch(src);
-            const code = await response.text();
-            const newScript = document.createElement('script');
-            newScript.textContent = code;
-            document.body.appendChild(newScript);
+          const response = await fetch(src);
+          const code = await response.text();
+          const newScript = document.createElement("script");
+          newScript.textContent = code;
+          document.body.appendChild(newScript);
         } catch (error) {
-            console.error(`Gagal memuat script ${src}:`, error);
+          console.error(`Gagal memuat script ${src}:`, error);
         }
-    }
+      }
 
-    async function evaluatScriptDinamis(url) {
+      async function evaluatScriptDinamis(url) {
         const scriptsToLoad = [];
 
         // Selalu muat komponen tabel global agar siap digunakan di halaman mana pun
-        scriptsToLoad.push('/static/components/table_component.js');
+        scriptsToLoad.push("/static/components/table_component.js");
 
-        if (url.includes('/pages/master_obat.html')) {
-            scriptsToLoad.push('/static/js/master_obat.js');
-        } else if (url.includes('/pages/supplier.html')) {
-            scriptsToLoad.push('/static/js/supplier.js');
-        } else if (url.includes('/pages/retur.html')) {
-            scriptsToLoad.push('/static/js/retur.js');
-        } else if (url.includes('/pages/pembelian.html')) {
-            scriptsToLoad.push('/static/js/pembelian.js');
-        } else if (url.includes('/pages/daftar_faktur.html')) {
-            scriptsToLoad.push('/static/js/daftar_faktur.js');
-        } else if (url.includes('/pages/stok_opname.html')) {
-            scriptsToLoad.push('/static/js/stok_opname.js');
-        } else if (url.includes('/pages/dashboard.html')) {
-            scriptsToLoad.push('/static/js/dashboard.js');
-        } else if (url.includes('/pages/kartu_stok.html')) {
-            scriptsToLoad.push('/static/js/kartu_stok.js');
-        } else if (url.includes('/pages/kasir.html')) {
-            scriptsToLoad.push('/static/js/struk.js');
-            scriptsToLoad.push('/static/app.js');
-        } 
+        if (url.includes("/pages/master_obat.html")) {
+          scriptsToLoad.push("/static/js/master_obat.js");
+        } else if (url.includes("/pages/supplier.html")) {
+          scriptsToLoad.push("/static/js/supplier.js");
+        } else if (url.includes("/pages/retur.html")) {
+          scriptsToLoad.push("/static/js/retur.js");
+        } else if (url.includes("/pages/pembelian.html")) {
+          scriptsToLoad.push("/static/js/pembelian.js");
+        } else if (url.includes("/pages/daftar_faktur.html")) {
+          scriptsToLoad.push("/static/js/daftar_faktur.js");
+        } else if (url.includes("/pages/stok_opname.html")) {
+          scriptsToLoad.push("/static/js/stok_opname.js");
+        } else if (url.includes("/pages/dashboard.html")) {
+          scriptsToLoad.push("/static/js/dashboard.js");
+        } else if (url.includes("/pages/kartu_stok.html")) {
+          scriptsToLoad.push("/static/js/kartu_stok.js");
+        } else if (url.includes("/pages/kasir.html")) {
+          scriptsToLoad.push("/static/js/struk.js");
+          scriptsToLoad.push("/static/app.js");
+        }
 
         for (const src of scriptsToLoad) {
-            await loadScript(src);
+          await loadScript(src);
         }
 
         // Panggil fungsi inisialisasi halaman setelah script siap
-        if (url.includes('/pages/master_obat.html')) {
-            if (typeof window.muatMasterObat === 'function') window.muatMasterObat();
-        } else if (url.includes('/pages/supplier.html')) {
-            if (typeof window.muatSupplier === 'function') window.muatSupplier();
-        } else if (url.includes('/pages/pembelian.html')) {
-            if (typeof window.muatDropdownObat === 'function') window.muatDropdownObat();
-        } else if (url.includes('/pages/daftar_faktur.html')) {
-            if (typeof window.muatDaftarFaktur === 'function') window.muatDaftarFaktur();
-        } else if (url.includes('/pages/stok_opname.html')) {
-            if (typeof window.loadBatches === 'function') window.loadBatches();
-        } else if (url.includes('/pages/dashboard.html')) {
-            if (typeof window.initDashboard === 'function') {
-                window.initDashboard();
-            } else if (typeof window.muatDashboard === 'function') {
-                window.muatDashboard();
+        if (url.includes("/pages/master_obat.html")) {
+          if (typeof window.muatMasterObat === "function")
+            window.muatMasterObat();
+        } else if (url.includes("/pages/supplier.html")) {
+          if (typeof window.muatSupplier === "function") window.muatSupplier();
+        } else if (url.includes("/pages/pembelian.html")) {
+          if (typeof window.muatDropdownObat === "function")
+            window.muatDropdownObat();
+        } else if (url.includes("/pages/daftar_faktur.html")) {
+          if (typeof window.muatDaftarFaktur === "function")
+            window.muatDaftarFaktur();
+        } else if (url.includes("/pages/stok_opname.html")) {
+          if (typeof window.loadBatches === "function") window.loadBatches();
+        } else if (url.includes("/pages/dashboard.html")) {
+          if (typeof window.initDashboard === "function") {
+            window.initDashboard();
+          } else if (typeof window.muatDashboard === "function") {
+            window.muatDashboard();
+          }
+        } else if (url.includes("/pages/kartu_stok.html")) {
+          if (typeof window.muatMasterObatKartu === "function")
+            window.muatMasterObatKartu(); // Ubah dari muatDropdownObatKartu ke muatMasterObatKartu
+        } else if (url.includes("/pages/kasir.html")) {
+          if (typeof window.initKasir === "function") window.initKasir();
+        } else if (url.includes("/pages/retur.html")) {
+          if (typeof window.muatDropdownObatRetur === "function")
+            window.muatDropdownObatRetur();
+        }
+      }
+
+      async function cekPeringatanGlobal() {
+        try {
+          const response = await fetch(
+            `${window.location.origin}/stok/peringatan/stok-expired`,
+          );
+          if (!response.ok) return;
+
+          const data = await response.json();
+          const totalMenipis = data.stok_menipis ? data.stok_menipis.length : 0;
+          const totalExpired = data.batch_expired
+            ? data.batch_expired.length
+            : 0;
+          const totalKritis = totalMenipis + totalExpired;
+
+          const alertBox = document.getElementById("floatingAlertBox");
+          const alertText = document.getElementById("floatingAlertText");
+          const alertBadge = document.getElementById("alertCountBadge");
+
+          if (totalKritis > 0) {
+            alertBadge.innerText = totalKritis;
+            let htmlContent = "";
+
+            if (totalMenipis > 0) {
+              htmlContent += `<p><i class="fa-solid fa-box-open" style="color: #e67e22;"></i> <b>${totalMenipis}</b> obat stoknya menipis.</p>`;
             }
-        } else if (url.includes('/pages/kartu_stok.html')) {
-            if (typeof window.muatMasterObatKartu === 'function') window.muatMasterObatKartu(); // Ubah dari muatDropdownObatKartu ke muatMasterObatKartu
-        } else if (url.includes('/pages/kasir.html')) {
-            if (typeof window.initKasir === 'function') window.initKasir();
-        } else if (url.includes('/pages/retur.html')) {
-            if (typeof window.muatDropdownObatRetur === 'function') window.muatDropdownObatRetur();
+            if (totalExpired > 0) {
+              htmlContent += `<p><i class="fa-regular fa-calendar-xmark" style="color: #c0392b;"></i> <b>${totalExpired}</b> batch mendekati/lewat expired.</p>`;
+            }
+            htmlContent += `<small style="color: #7f8c8d; display:block; margin-top:5px;">*Obat non-aktif otomatis diabaikan.</small>`;
+
+            alertText.innerHTML = htmlContent;
+            alertBox.classList.add("active"); // Munculkan kotak mengapung di pojok kanan bawah
+          } else {
+            alertBox.classList.remove("active"); // Sembunyikan jika aman
+          }
+        } catch (error) {
+          console.error("Gagal memuat peringatan global:", error);
         }
-    }
-    // Muat halaman kasir secara default saat index dibuka
-    window.addEventListener('DOMContentLoaded', () => {
-        const user = localStorage.getItem('user_apotek');
+      }
+
+      function tutupFloatingAlert() {
+        document.getElementById("floatingAlertBox").classList.remove("active");
+      }
+      // Muat halaman kasir secara default saat index dibuka
+      window.addEventListener("DOMContentLoaded", () => {
+        const user = localStorage.getItem("user_apotek");
         if (!user) {
-            window.location.href = '/pages/login.html';
-            return;
+          window.location.href = "/pages/login.html";
+          return;
         }
-        document.getElementById('userInfo').innerHTML = `<i class="fa-solid fa-user-circle"></i> ${user}`;
+        document.getElementById("userInfo").innerHTML =
+          `<i class="fa-solid fa-user-circle"></i> ${user}`;
 
-        muatHalaman('/pages/kasir.html');
-    });
-</script>
-
-</body>
+        muatHalaman("/pages/kasir.html");
+        cekPeringatanGlobal();
+        setInterval(cekPeringatanGlobal, 300000);
+      });
+    </script>
+  </body>
 </html>

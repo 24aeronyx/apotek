@@ -10,7 +10,8 @@ router = APIRouter(tags=["Obat"])
 def cari_obat():
     db = SessionLocal()
     try:
-        medicines = db.query(Medicine).all()
+        # Hanya ambil obat yang berstatus aktif untuk halaman kasir
+        medicines = db.query(Medicine).filter(Medicine.is_active == True).all()
         hasil = []
         for m in medicines:
             total_stok = sum(batch.jumlah_stok for batch in m.batches) if m.batches else 0
@@ -54,6 +55,7 @@ def get_all_medicines():
                 "harga_jual": m.harga_jual,
                 "total_stok": total_stok,
                 "gambar": m.gambar if m.gambar else "",
+                "is_active": m.is_active, # <-- Sertakan status aktif ke frontend
                 "batches": list_batch
             })
         return hasil
@@ -61,7 +63,7 @@ def get_all_medicines():
         db.close()
 
 
-# --- TAMBAHKAN ENDPOINT POST INI AGAR BISA MENAMBAH OBAT BARU ---
+# --- ENDPOINT POST UNTUK MENAMBAH OBAT BARU ---
 @router.post("/obat", status_code=status.HTTP_201_CREATED)
 def create_medicine(data: MedicineCreate):
     db = SessionLocal()
@@ -70,7 +72,8 @@ def create_medicine(data: MedicineCreate):
             nama=data.nama,
             kategori=data.kategori,
             harga_jual=data.harga_jual,
-            gambar=data.gambar if hasattr(data, 'gambar') else None
+            gambar=data.gambar if hasattr(data, 'gambar') else None,
+            is_active=data.is_active if hasattr(data, 'is_active') else True # <-- Tangkap status aktif
         )
         db.add(new_medicine)
         db.commit()
@@ -100,6 +103,8 @@ def update_medicine(obat_id: int, data: MedicineUpdate):
             medicine.harga_jual = data.harga_jual
         if data.gambar is not None:
             medicine.gambar = data.gambar
+        if hasattr(data, 'is_active') and data.is_active is not None:
+            medicine.is_active = data.is_active # <-- Perbarui status aktif
 
         db.commit()
         return {"message": "Master obat berhasil diperbarui"}
@@ -125,4 +130,3 @@ def delete_medicine(obat_id: int):
         raise HTTPException(status_code=400, detail="Gagal menghapus obat (kemungkinan masih terikat dengan data batch/transaksi).")
     finally:
         db.close()
-        

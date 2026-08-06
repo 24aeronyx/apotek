@@ -75,17 +75,24 @@ window.muatDataKartuStok = async function() {
 
         data.forEach(row => {
             let badgeWarna = '#3498db';
-            if (row.jenis_transaksi.includes('PEMBELIAN')) badgeWarna = '#27ae60';
-            else if (row.jenis_transaksi.includes('PENJUALAN')) badgeWarna = '#e67e22';
-            else if (row.jenis_transaksi.includes('OPNAME')) badgeWarna = '#8e44ad';
+            const jenis = (row.jenis_transaksi || '').toUpperCase();
+            
+            if (jenis.includes('PEMBELIAN')) badgeWarna = '#27ae60';
+            else if (jenis.includes('PENJUALAN')) badgeWarna = '#e67e22';
+            else if (jenis.includes('OPNAME')) badgeWarna = '#8e44ad';
+            else if (jenis.includes('RETUR')) badgeWarna = '#e74c3c';
+
+            // Memastikan format plus/minus tampil jelas
+            let masukFormatted = row.masuk > 0 ? '+' + row.masuk : '-';
+            let keluarFormatted = row.keluar > 0 ? '-' + row.keluar : '-';
 
             tbody.innerHTML += `
                 <tr>
                     <td>${row.tanggal}</td>
                     <td><strong>${row.nama_obat}</strong></td>
                     <td><span style="background: ${badgeWarna}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">${row.jenis_transaksi}</span></td>
-                    <td style="text-align: center; color: #27ae60; font-weight: bold;">${row.masuk > 0 ? '+' + row.masuk : '-'}</td>
-                    <td style="text-align: center; color: #c0392b; font-weight: bold;">${row.keluar > 0 ? '-' + row.keluar : '-'}</td>
+                    <td style="text-align: center; color: #27ae60; font-weight: bold;">${masukFormatted}</td>
+                    <td style="text-align: center; color: #c0392b; font-weight: bold;">${keluarFormatted}</td>
                     <td style="text-align: center; font-weight: bold; background: #e8f8f5; color: #16a085;">${row.stok_sisa}</td>
                     <td style="color: #555;">${row.keterangan || '-'}</td>
                 </tr>

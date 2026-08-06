@@ -31,14 +31,6 @@ async function muatDashboard() {
         const response = await fetch(`${window.API_URL}/laporan/harian`);
         const data = await response.json();
 
-        const tbody = document.querySelector('#tabelLaporan tbody');
-        tbody.innerHTML = '';
-
-        if (!Array.isArray(data) || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">Belum ada data transaksi tercatat.</td></tr>';
-            return;
-        }
-
         const bulanAktif = parseInt(document.getElementById('filterBulan').value);
         const tahunAktif = parseInt(document.getElementById('filterTahun').value);
 
@@ -56,12 +48,15 @@ async function muatDashboard() {
         });
 
         if (dataBulanIni.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px;">Belum ada transaksi pada periode ${namaBulanList[bulanAktif - 1]} ${tahunAktif}.</td></tr>`;
             document.getElementById('statTotalTransaksi').innerText = 0;
             document.getElementById('statTotalItem').innerText = 0;
             document.getElementById('statTotalOmzet').innerText = 'Rp 0';
             document.getElementById('statTotalLaba').innerText = 'Rp 0';
             renderGrafikOmzet([], []);
+            
+            if (typeof window.renderGlobalTable === 'function') {
+                window.renderGlobalTable('#wrapperTabelLaporan', [], [], `Belum ada transaksi pada periode ${namaBulanList[bulanAktif - 1]} ${tahunAktif}.`);
+            }
             return;
         }
 
@@ -75,8 +70,6 @@ async function muatDashboard() {
             totalItemTerjual += item.total_item;
             totalOmzet += item.grand_total || 0;
             
-            // PERBAIKAN DI SINI:
-            // Membaca 'total_laba' atau 'perkiraan_laba' atau 'estimasi_laba' agar kompatibel dengan berbagai nama respons dari backend
             let labaTransaksi = item.total_laba ?? item.perkiraan_laba ?? item.estimasi_laba ?? 0; 
             totalLabaBersih += labaTransaksi;
 
@@ -85,23 +78,30 @@ async function muatDashboard() {
                 groupedDataPerHari[tanggalSaja] = 0;
             }
             groupedDataPerHari[tanggalSaja] += (item.grand_total || 0);
-
-            tbody.innerHTML += `
-                <tr>
-                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;"><strong>#${item.id_nota}</strong></td>
-                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${item.kasir}</td>
-                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${item.waktu}</td>
-                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${item.total_item} Item</td>
-                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: right;">Rp ${(item.grand_total || 0).toLocaleString('id-ID')}</td>
-                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: right; color: #27ae60; font-weight: bold;">Rp ${labaTransaksi.toLocaleString('id-ID')}</td>
-                </tr>
-            `;
         });
 
         document.getElementById('statTotalTransaksi').innerText = totalTransaksi;
         document.getElementById('statTotalItem').innerText = totalItemTerjual;
         document.getElementById('statTotalOmzet').innerText = 'Rp ' + totalOmzet.toLocaleString('id-ID');
         document.getElementById('statTotalLaba').innerText = 'Rp ' + totalLabaBersih.toLocaleString('id-ID');
+
+        // Definisi kolom untuk komponen tabel global
+        const kolomLaporan = [
+            { label: 'ID Nota', key: 'id_nota', render: row => `<strong>#${row.id_nota}</strong>` },
+            { label: 'Kasir', key: 'kasir' },
+            { label: 'Waktu Transaksi', key: 'waktu' },
+            { label: 'Jumlah Item', key: 'total_item', render: row => `${row.total_item} Item` },
+            { label: 'Grand Total', key: 'grand_total', align: 'right', render: row => `Rp ${(row.grand_total || 0).toLocaleString('id-ID')}` },
+            { label: 'Perkiraan Laba', key: 'total_laba', align: 'right', render: row => {
+                let laba = row.total_laba ?? row.perkiraan_laba ?? row.estimasi_laba ?? 0;
+                return `<span style="color: #27ae60; font-weight: bold;">Rp ${laba.toLocaleString('id-ID')}</span>`;
+            }}
+        ];
+
+        // Render tabel menggunakan komponen global
+        if (typeof window.renderGlobalTable === 'function') {
+            window.renderGlobalTable('#wrapperTabelLaporan', kolomLaporan, dataBulanIni, "Tidak ada data riwayat penjualan.");
+        }
 
         let sortedDates = Object.keys(groupedDataPerHari).sort((a, b) => new Date(a) - new Date(b));
         if (typeof Chart !== 'undefined') {
@@ -112,7 +112,10 @@ async function muatDashboard() {
 
     } catch (error) {
         console.error("Gagal memuat dashboard:", error);
-        document.querySelector('#tabelLaporan tbody').innerHTML = '<tr><td colspan="6" style="text-align: center; color: red; padding: 20px;">Gagal terhubung ke server backend.</td></tr>';
+        const container = document.querySelector('#wrapperTabelLaporan');
+        if (container) {
+            container.innerHTML = '<div style="text-align: center; color: red; padding: 20px;">Gagal terhubung ke server backend.</div>';
+        }
     }
 }
 
@@ -146,7 +149,13 @@ function renderGrafikOmzet(labels, dataOmzet) {
 }
 
 function exportKeExcel() {
-    let tableHTML = document.getElementById('tabelLaporan').outerHTML;
+    const wrapper = document.getElementById('wrapperTabelLaporan');
+    const tableEl = wrapper ? wrapper.querySelector('table') : null;
+    if (!tableEl) {
+        tampilkanAlert("Informasi Ekspor", "Data tabel belum siap untuk diexport ke Excel.");
+        return;
+    }
+    let tableHTML = tableEl.outerHTML;
     let blob = new Blob(['\ufeff' + tableHTML], { type: 'application/vnd.ms-excel' });
     let url = URL.createObjectURL(blob);
     let a = document.createElement('a');
@@ -193,11 +202,11 @@ function exportKePDF() {
     doc.text(`Periode Laporan : ${bulanPilih} ${tahunPilih}`, 14, 48);
     doc.text(`Waktu Cetak       : ${new Date().toLocaleString('id-ID')}`, 14, 54);
 
-    // --- 3. AMBIL DATA DARI TABEL HTML ---
+    // --- 3. AMBIL DATA DARI TABEL HTML KOMPONEN ---
     const headers = [["ID Nota", "Kasir", "Waktu Transaksi", "Jumlah Item", "Grand Total", "Perkiraan Laba"]];
     const data = [];
 
-    const rows = document.querySelectorAll("#tabelLaporan tbody tr");
+    const rows = document.querySelectorAll("#wrapperTabelLaporan table tbody tr");
     rows.forEach(row => {
         const cols = row.querySelectorAll("td");
         if (cols.length >= 6) {
@@ -212,7 +221,7 @@ function exportKePDF() {
         }
     });
 
-    if (data.length === 0 || data[0][0] === "Belum ada transaksi") {
+    if (data.length === 0 || (data.length === 1 && data[0][0].includes("Tidak ada"))) {
         tampilkanAlert("Informasi Ekspor", "Tidak ada data riwayat penjualan pada periode ini untuk diexport ke PDF.");
         return;
     }

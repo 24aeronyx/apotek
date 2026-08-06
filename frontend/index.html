@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Pustaka jsPDF dan Plugin AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <style>
         /* Layout Sidebar & Main Content */
         body {
@@ -159,6 +162,7 @@
             <!-- KELOMPOK 3: LAPORAN -->
             <li style="padding: 15px 20px 5px 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: bold; margin-top: 5px;">Analitik & Laporan</li>
             <li><a href="#" onclick="muatHalaman('/pages/dashboard.html', this)"><i class="fa-solid fa-chart-pie"></i> Dashboard & Keuangan</a></li>
+            <li><a href="#" onclick="muatHalaman('/pages/kartu_stok.html', this)"><i class="fa-solid fa-clock-rotate-left"></i> Kartu Stok Harian</a></li>
             
         </ul>
     </div>
@@ -263,6 +267,9 @@
     async function evaluatScriptDinamis(url) {
         const scriptsToLoad = [];
 
+        // Selalu muat komponen tabel global agar siap digunakan di halaman mana pun
+        scriptsToLoad.push('/static/components/table_component.js');
+
         if (url.includes('/pages/master_obat.html')) {
             scriptsToLoad.push('/static/js/master_obat.js');
         } else if (url.includes('/pages/supplier.html')) {
@@ -277,10 +284,12 @@
             scriptsToLoad.push('/static/js/stok_opname.js');
         } else if (url.includes('/pages/dashboard.html')) {
             scriptsToLoad.push('/static/js/dashboard.js');
+        } else if (url.includes('/pages/kartu_stok.html')) {
+            scriptsToLoad.push('/static/js/kartu_stok.js');
         } else if (url.includes('/pages/kasir.html')) {
             scriptsToLoad.push('/static/js/struk.js');
             scriptsToLoad.push('/static/app.js');
-        }
+        } 
 
         for (const src of scriptsToLoad) {
             await loadScript(src);
@@ -303,13 +312,14 @@
             } else if (typeof window.muatDashboard === 'function') {
                 window.muatDashboard();
             }
+        } else if (url.includes('/pages/kartu_stok.html')) {
+            if (typeof window.muatMasterObatKartu === 'function') window.muatMasterObatKartu(); // Ubah dari muatDropdownObatKartu ke muatMasterObatKartu
         } else if (url.includes('/pages/kasir.html')) {
             if (typeof window.initKasir === 'function') window.initKasir();
         } else if (url.includes('/pages/retur.html')) {
             if (typeof window.muatDropdownObatRetur === 'function') window.muatDropdownObatRetur();
         }
     }
-
     // Muat halaman kasir secara default saat index dibuka
     window.addEventListener('DOMContentLoaded', () => {
         const user = localStorage.getItem('user_apotek');

@@ -1,0 +1,41 @@
+<div class="page-container">
+    <div class="content-card-section">
+        
+        <div class="section-header-flex">
+            <h3 class="section-title-custom"><i class="fa-solid fa-clock-rotate-left"></i> Kartu Stok & Riwayat Mutasi Obat</h3>
+            
+            <!-- Filter Pilih Obat & Tanggal -->
+            <div class="filter-group-flex">
+                <div class="search-input-wrapper">
+                    <input type="hidden" id="selectedObatKartuId">
+                    <input type="text" id="inputCariObatKartu" class="form-input-custom" onkeyup="filterDropdownObatKartu()" placeholder="Ketik nama obat untuk kartu stok...">
+                    
+                    <div id="dropdownHasilObatKartu" class="dropdown-autocomplete"></div>
+                </div>
+
+                <input type="date" id="filterTanggal" class="form-input-custom" onchange="muatDataKartuStok()" style="width: auto; padding: 7px 12px;">
+            </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table id="tabelKartuStok" class="table-kartu-stok">
+                <thead>
+                    <tr>
+                        <th>Waktu / Tanggal</th>
+                        <th>Nama Obat</th>
+                        <th>Jenis Transaksi</th>
+                        <th style="text-align: center;">Masuk (+)</th>
+                        <th style="text-align: center;">Keluar (-)</th>
+                        <th style="text-align: center;">Sisa Stok</th>
+                        <th>Keterangan / Referensi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="7" style="text-align: center; padding: 25px; color: #7f8c8d;">Silakan ketik dan pilih obat terlebih dahulu untuk melihat kartu stok.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/kartu_stok.js"></script>

@@ -152,6 +152,17 @@ window.hapusItemBeli = function(index) {
     renderDrafPembelian();
 };
 
+// Fungsi menghitung total termasuk diskon dan PPN (Opsional untuk preview dinamis jika diperlukan)
+window.hitungGrandTotalFaktur = function() {
+    let subtotalTotal = keranjangBeli.reduce((sum, item) => sum + item.subtotal, 0);
+    let diskon = parseFloat(document.getElementById('diskonFaktur').value) || 0;
+    let setelahDiskon = Math.max(0, subtotalTotal - diskon);
+    
+    let isPpn = document.getElementById('checkPpn').checked;
+    let grandTotal = isPpn ? setelhaDiskon * 1.11 : setelhaDiskon;
+    return grandTotal;
+};
+
 window.prosesSimpanPembelian = async function() {
     if (keranjangBeli.length === 0) {
         tampilkanAlertPembelian("Peringatan", "Keranjang pembelian masih kosong!", "error");
@@ -166,9 +177,13 @@ window.prosesSimpanPembelian = async function() {
 
     const supplierId = parseInt(supplierEl.value);
     const nomorFaktur = document.getElementById('nomorFaktur').value;
+    const tanggalFaktur = document.getElementById('tanggalFaktur').value;
+    const tanggalJatuhTempo = document.getElementById('tanggalJatuhTempo').value;
+    const diskonFaktur = parseFloat(document.getElementById('diskonFaktur').value) || 0;
+    const termasukPpn = document.getElementById('checkPpn').checked;
 
-    if (!nomorFaktur) {
-        tampilkanAlertPembelian("Peringatan", "Nomor faktur wajib diisi!", "error");
+    if (!nomorFaktur || !tanggalFaktur) {
+        tampilkanAlertPembelian("Peringatan", "Nomor Faktur dan Tanggal Faktur Fisik wajib diisi!", "error");
         return;
     }
 
@@ -177,6 +192,10 @@ window.prosesSimpanPembelian = async function() {
     const payload = {
         supplier_id: supplierId,
         nomor_faktur: nomorFaktur,
+        tanggal_faktur: tanggalFaktur,
+        tanggal_jatuh_tempo: tanggalJatuhTempo ? tanggalJatuhTempo : null,
+        diskon_nominal: diskonFaktur,
+        termasuk_ppn: termasukPpn,
         user_pembuat: userLogin,
         items: keranjangBeli
     };
@@ -194,6 +213,10 @@ window.prosesSimpanPembelian = async function() {
             keranjangBeli = [];
             renderDrafPembelian();
             document.getElementById('nomorFaktur').value = '';
+            document.getElementById('tanggalFaktur').value = '';
+            document.getElementById('tanggalJatuhTempo').value = '';
+            document.getElementById('diskonFaktur').value = '0';
+            document.getElementById('checkPpn').checked = false;
         } else {
             tampilkanAlertPembelian("Gagal Menyimpan", result.detail || "Terjadi kesalahan pada server.", "error");
         }

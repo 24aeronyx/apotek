@@ -1,7 +1,7 @@
 # models.py
 import json
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, Date, DateTime, ForeignKey, TypeDecorator
+from sqlalchemy import Column, Integer, String, Text, Date, DateTime, Boolean, ForeignKey, TypeDecorator
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -27,7 +27,6 @@ class User(Base):
     username = Column(String(50), unique=True, index=True)
     password_hash = Column(String(255))
     
-    # Gunakan kelas kustom yang baru saja dibuat
     permissions = Column(JSONEncodedDict, default=lambda: {})
     
 class Medicine(Base):
@@ -37,7 +36,9 @@ class Medicine(Base):
     nama = Column(String(100), unique=True, index=True)
     kategori = Column(String(50), default="Umum")
     harga_jual = Column(Integer, default=0)
-    gambar = Column(String(255), nullable=True) 
+    gambar = Column(String(255), nullable=True)
+    stok_minimum = Column(Integer, default=5)
+    is_active = Column(Boolean, default=True)  # <-- TAMBAHAN: Toggle Status Obat Aktif / Tidak Digunakan
     
     batches = relationship("InventoryBatch", back_populates="medicine")
 
@@ -86,13 +87,13 @@ class KartuStok(Base):
     obat_id = Column(Integer, ForeignKey("medicines.id"))  
     tanggal = Column(DateTime, default=datetime.utcnow)
     jenis_transaksi = Column(String(256))  # Contoh: "PENJUALAN", "PEMBELIAN", "OPNAME", "PEMUSNAHAN"
-    jumlah = Column(Integer)              # Nilai positif (masuk) atau negatif (keluar)
-    stok_sisa = Column(Integer)           # Sisa stok setelah transaksi
+    jumlah = Column(Integer)               # Nilai positif (masuk) atau negatif (keluar)
+    stok_sisa = Column(Integer)            # Sisa stok setelah transaksi
     keterangan = Column(String(256), nullable=True)
 
     medicine = relationship("Medicine")
 
-# --- TAMBAHAN MODEL SUPPLIER & PEMBELIAN (FAKTUR MASUK) ---
+# --- SUPPLIER & PEMBELIAN (FAKTUR MASUK) ---
 
 class Supplier(Base):
     __tablename__ = "suppliers"
@@ -112,7 +113,16 @@ class Purchase(Base):
     id = Column(Integer, primary_key=True, index=True)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"))
     nomor_faktur = Column(String(100), unique=True)
-    tanggal_pembelian = Column(DateTime, default=datetime.now)
+    
+    # --- TAMBAHAN ATRIBUT FAKTUR SESUAI PERMINTAAN KLIEN ---
+    tanggal_faktur = Column(Date, nullable=True)          # Tanggal fisik faktur dari supplier
+    tanggal_jatuh_tempo = Column(Date, nullable=True)     # Tanggal jatuh tempo pembayaran
+    tanggal_pembelian = Column(DateTime, default=datetime.now) # Tanggal sistem mencatat (Input)
+    diskon_persen = Column(Integer, default=0)            # Diskon dalam bentuk persen (%)
+    diskon_nominal = Column(Integer, default=0)           # Diskon dalam bentuk nominal (Rp)
+    termasuk_ppn = Column(Boolean, default=False)         # Flag PPN 11% (True jika belum termasuk lalu ditambah 11%)
+    # -----------------------------------------------------
+
     total_pembayaran = Column(Integer, default=0)
     user_pembuat = Column(String(50), nullable=True)
 

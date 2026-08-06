@@ -1,0 +1,29 @@
+<div class="container" style="max-width: 1100px; margin: auto;">
+    <div class="card-section" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1; margin-bottom: 20px;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px; margin-bottom: 20px;">
+            <h3 style="margin: 0; color: #2c3e50; font-size: 18px;">Daftar Faktur Pembelian Masuk</h3>
+            <input type="text" id="cariFaktur" placeholder="🔍 Cari No. Faktur / Supplier..." onkeyup="filterDaftarFaktur()" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; width: 250px; font-size: 14px;">
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table id="tabelDaftarFaktur" style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr>
+                        <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50;">No. Faktur</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50;">Supplier</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50;">Tgl Faktur</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50;">Jatuh Tempo</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50; text-align: right;">Total Bayar</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #ecf0f1; background: #f8f9fa; color: #2c3e50; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="6" style="text-align: center; padding: 20px;">Memuat data faktur...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/daftar_faktur.js"></script>

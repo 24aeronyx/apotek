@@ -14,6 +14,28 @@
             </div>
         </div>
 
+                <!-- Bagian Tambahan Informasi Faktur -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 15px;">
+            <div>
+                <label style="font-weight: bold; font-size: 13px; color: #2c3e50; display: block; margin-bottom: 5px;">Tanggal Faktur (Fisik):</label>
+                <input type="date" id="tanggalFaktur" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;">
+            </div>
+            <div>
+                <label style="font-weight: bold; font-size: 13px; color: #2c3e50; display: block; margin-bottom: 5px;">Tanggal Jatuh Tempo:</label>
+                <input type="date" id="tanggalJatuhTempo" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;">
+            </div>
+            <div>
+                <label style="font-weight: bold; font-size: 13px; color: #2c3e50; display: block; margin-bottom: 5px;">Diskon Faktur (Rp):</label>
+                <input type="number" id="diskonFaktur" value="0" min="0" oninput="hitungGrandTotalFaktur()" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;">
+            </div>
+            <div style="display: flex; align-items: center; padding-top: 22px;">
+                <label style="cursor: pointer; font-weight: bold; color: #2c3e50; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="checkPpn" onchange="hitungGrandTotalFaktur()" style="width: 18px; height: 18px;"> 
+                    Harga Belum Termasuk PPN (+11%)
+                </label>
+            </div>
+        </div>
+
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #ecf0f1; margin-bottom: 20px;">
             <h4 style="margin-top: 0; color: #2c3e50; font-size: 15px; margin-bottom: 15px;">Tambah Item Obat ke Faktur</h4>
             

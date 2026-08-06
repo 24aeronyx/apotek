@@ -13,6 +13,7 @@ async function loadBatches() {
         
         let allBatches = [];
         medicines.forEach(m => {
+            // Karena backend sudah memfilter obat non-aktif, data obat non-aktif aman terabaikan
             if (m.batches && m.batches.length > 0) {
                 m.batches.forEach(b => {
                     allBatches.push({
@@ -22,6 +23,7 @@ async function loadBatches() {
                         jumlah_stok: b.jumlah_stok,
                         harga_beli: b.harga_beli,
                         tanggal_kedaluwarsa: b.tanggal_kedaluwarsa,
+                        stok_minimum: m.stok_minimum || 5, // Ambil batas stok minimum obat
                         medicine: { nama: m.nama }
                     });
                 });
@@ -34,7 +36,7 @@ async function loadBatches() {
     }
 }
 
-// 2. Tampilkan Data ke Tabel
+// 2. Tampilkan Data ke Tabel dengan Indikator Peringatan (Warning)
 function renderTable(batches) {
     const tbody = document.getElementById("batchTableBody");
     tbody.innerHTML = "";
@@ -44,17 +46,41 @@ function renderTable(batches) {
         return;
     }
 
+    const hariIni = new Date();
+
     batches.forEach(b => {
+        // Hitung selisih hari menuju kedaluwarsa
+        const tglExpired = new Date(b.tanggal_kedaluwarsa);
+        const selisihHari = Math.ceil((tglExpired - hariIni) / (1000 * 60 * 60 * 24));
+        
+        let warningBadge = "";
+        let rowBackground = "";
+
+        // Logika Peringatan Kedaluwarsa
+        if (selisihHari < 0) {
+            warningBadge += `<span style="background: #e74c3c; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 5px;">EXPIRED</span>`;
+            rowBackground = "background-color: #fdf2f2;"; // Baris agak kemerahan
+        } else if (selisihHari <= 90) {
+            warningBadge += `<span style="background: #f39c12; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 5px;">⚠️ Mendekati ED</span>`;
+            rowBackground = "background-color: #fef9e7;"; // Baris agak kekuningan
+        }
+
+        // Logika Peringatan Stok Menipis
+        if (b.jumlah_stok <= b.stok_minimum) {
+            warningBadge += `<span style="background: #e67e22; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 5px;">Stok Menipis</span>`;
+        }
+
         const tr = document.createElement("tr");
-        tr.style.borderBottom = "1px solid #dee2e6";
+        tr.style.cssText = `border-bottom: 1px solid #dee2e6; ${rowBackground}`;
+        
         tr.innerHTML = `
             <td style="padding: 12px;"><span style="background: #6c757d; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px;">${b.nomor_batch || '-'}</span></td>
-            <td style="padding: 12px; font-weight: bold;">${b.medicine ? b.medicine.nama : 'Obat ID: ' + b.medicine_id}</td>
+            <td style="padding: 12px; font-weight: bold;">${b.medicine ? b.medicine.nama : 'Obat ID: ' + b.medicine_id} ${warningBadge}</td>
             <td style="padding: 12px;">Rp ${b.harga_beli.toLocaleString('id-ID')}</td>
             <td style="padding: 12px;">${b.tanggal_kedaluwarsa || '-'}</td>
             <td style="padding: 12px;"><span style="background: #17a2b8; color: white; padding: 3px 8px; border-radius: 4px; font-weight: bold;">${b.jumlah_stok}</span></td>
             <td style="padding: 12px; text-align: center;">
-                <button type="button" style="background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;" onclick="openOpnameModal(${b.id}, '${b.medicine ? b.medicine.nama : 'Obat'} (Batch ${b.nomor_batch})', ${b.jumlah_stok})">
+                <button type="button" style="background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;" onclick="openOpnameModal(${b.id}, '${b.medicine ? b.medicine.nama.replace(/'/g, "\\'") : 'Obat'} (Batch ${b.nomor_batch})', ${b.jumlah_stok})">
                     <i class="fa-solid fa-pen-to-square me-1"></i> Opname / Adjust
                 </button>
             </td>
@@ -106,7 +132,6 @@ async function handleOpnameSubmit(e) {
 
         if (response.ok) {
             tutupOpnameModal();
-            // Tampilkan modal alert sukses yang elegan
             tampilkanAlertCustom(
                 "Berhasil!", 
                 `Stok opname berhasil disimpan.<br>Selisih perubahan: <strong style="color: ${result.selisih >= 0 ? '#27ae60' : '#e74c3c'}">${result.selisih > 0 ? '+' + result.selisih : result.selisih} Unit</strong>`, 
@@ -126,7 +151,6 @@ async function handleOpnameSubmit(e) {
 function tampilkanAlertCustom(judul, pesan, tipe = "success") {
     let alertModal = document.getElementById("modalAlertCustom");
     if (!alertModal) {
-        // Buat elemen modal secara otomatis jika belum ada di HTML
         const div = document.createElement("div");
         div.id = "modalAlertCustom";
         div.style.cssText = "display: flex; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;";
